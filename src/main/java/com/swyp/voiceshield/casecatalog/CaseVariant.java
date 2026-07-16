@@ -8,7 +8,11 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "case_variants")
@@ -29,6 +33,9 @@ public class CaseVariant {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @OneToMany(mappedBy = "variant", fetch = FetchType.LAZY)
+    private Set<CaseVariantOption> options = new LinkedHashSet<>();
+
     protected CaseVariant() {
     }
 
@@ -42,5 +49,9 @@ public class CaseVariant {
 
     public String getContent() {
         return content;
+    }
+
+    public Set<CaseVariantOption> getOptions() {
+        return options;
     }
 }

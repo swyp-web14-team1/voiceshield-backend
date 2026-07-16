@@ -9,6 +9,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,5 +36,16 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.caseName").value("휴대폰 고장"))
                 .andExpect(jsonPath("$.categoryId").doesNotExist())
                 .andExpect(jsonPath("$.categoryName").doesNotExist());
+    }
+
+    @Test
+    void returnsVoiceScriptAndQuizOptionsForMobileRepair() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.variants.voice.content").value(containsString("휴대폰이 고장 나서")))
+                .andExpect(jsonPath("$.variants.voice.options", hasSize(4)))
+                .andExpect(jsonPath("$.variants.voice.options[1].optionNumber").value(2))
+                .andExpect(jsonPath("$.variants.voice.options[1].isCorrect").value(true))
+                .andExpect(jsonPath("$.variants.voice.options[3].isCorrect").value(true));
     }
 }

@@ -1,0 +1,44 @@
+CREATE TABLE case_variant_options (
+    option_id VARCHAR(255) PRIMARY KEY,
+    variant_id VARCHAR(255) NOT NULL,
+    option_number INTEGER NOT NULL,
+    option_text TEXT NOT NULL,
+    is_correct BOOLEAN NOT NULL,
+    CONSTRAINT fk_case_variant_options_variant
+        FOREIGN KEY (variant_id) REFERENCES case_variants (variant_id),
+    CONSTRAINT uk_case_variant_options_variant_number
+        UNIQUE (variant_id, option_number)
+);
+
+UPDATE case_variants
+SET content = '[전화벨]' || CHAR(10) ||
+              '나' || CHAR(10) ||
+              '"여보세요?"' || CHAR(10) ||
+              '사기범' || CHAR(10) ||
+              '"엄마... 나야.' || CHAR(10) ||
+              '휴대폰이 고장 나서' || CHAR(10) ||
+              '친구 전화로 연락하는 거야."' || CHAR(10) ||
+              '나' || CHAR(10) ||
+              '"무슨 일이야?"' || CHAR(10) ||
+              '사기범' || CHAR(10) ||
+              '"아까 길에서 넘어져서' || CHAR(10) ||
+              '응급실에 왔는데...' || CHAR(10) ||
+              '보험 처리 전에' || CHAR(10) ||
+              '병원비를 먼저 내야 한대."' || CHAR(10) ||
+              '나' || CHAR(10) ||
+              '"많이 다친 거야?"' || CHAR(10) ||
+              '사기범' || CHAR(10) ||
+              '"괜찮은데...' || CHAR(10) ||
+              '지금 간호사가 기다리고 있어.' || CHAR(10) ||
+              '내 번호로는 연락 안 되고' || CHAR(10) ||
+              '이 번호로만 통화할 수 있어.' || CHAR(10) ||
+              '병원 계좌로 20만 원만' || CHAR(10) ||
+              '먼저 보내줘."'
+WHERE variant_id = 'case-mobile-repair-voice';
+
+INSERT INTO case_variant_options (option_id, variant_id, option_number, option_text, is_correct)
+VALUES
+    ('case-mobile-repair-voice-option-1', 'case-mobile-repair-voice', 1, '① 계좌번호를 받아 바로 송금한다.', FALSE),
+    ('case-mobile-repair-voice-option-2', 'case-mobile-repair-voice', 2, '② 기존에 저장된 아들 번호로 직접 전화한다.', TRUE),
+    ('case-mobile-repair-voice-option-3', 'case-mobile-repair-voice', 3, '③ 상대방이 알려준 계좌로 송금한다.', FALSE),
+    ('case-mobile-repair-voice-option-4', 'case-mobile-repair-voice', 4, '④ 전화를 끊고 다른 가족에게 먼저 확인한다.', TRUE);
