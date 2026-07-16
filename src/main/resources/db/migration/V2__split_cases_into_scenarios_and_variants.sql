@@ -1,6 +1,6 @@
 CREATE TABLE case_scenarios (
     scenario_id VARCHAR(255) PRIMARY KEY,
-    category_id VARCHAR(255) NOT NULL,
+    category_id VARCHAR(255),
     case_name VARCHAR(255) NOT NULL,
     difficulty VARCHAR(255),
     estimated_learning_time VARCHAR(255),

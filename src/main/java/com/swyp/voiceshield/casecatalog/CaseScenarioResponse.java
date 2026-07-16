@@ -5,8 +5,6 @@ import java.util.Map;
 
 public record CaseScenarioResponse(
         String scenarioId,
-        String categoryId,
-        String categoryName,
         String caseName,
         String difficulty,
         String estimatedLearningTime,
@@ -20,8 +18,6 @@ public record CaseScenarioResponse(
                 variants.put(variant.getChannel().name().toLowerCase(), CaseVariantResponse.from(variant)));
         return new CaseScenarioResponse(
                 scenario.getId(),
-                scenario.getCategory().getId(),
-                scenario.getCategory().getName(),
                 scenario.getName(),
                 scenario.getDifficulty(),
                 scenario.getEstimatedLearningTime(),

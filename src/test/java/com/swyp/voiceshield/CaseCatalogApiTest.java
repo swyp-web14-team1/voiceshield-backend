@@ -31,6 +31,8 @@ class CaseCatalogApiTest {
     void keepsMobileRepairAsItsOwnCategory() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-mobile-repair"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.categoryName").value("휴대폰 고장"));
+                .andExpect(jsonPath("$.caseName").value("휴대폰 고장"))
+                .andExpect(jsonPath("$.categoryId").doesNotExist())
+                .andExpect(jsonPath("$.categoryName").doesNotExist());
     }
 }

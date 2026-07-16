@@ -22,8 +22,8 @@ public class CaseScenario {
     @Column(name = "scenario_id")
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @Column(name = "case_name", nullable = false)
