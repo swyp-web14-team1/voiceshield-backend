@@ -16,7 +16,8 @@ class SchemaMigrationTest {
     @Test
     void createsCategoryAndCaseTables() {
         assertEquals(1, tableCount("categories"));
-        assertEquals(1, tableCount("cases"));
+        assertEquals(1, tableCount("case_scenarios"));
+        assertEquals(1, tableCount("case_variants"));
     }
 
     private int tableCount(String tableName) {
