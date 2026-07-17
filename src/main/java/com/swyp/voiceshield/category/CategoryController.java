@@ -1,10 +1,10 @@
 package com.swyp.voiceshield.category;
 
+import com.swyp.voiceshield.common.response.ApiResponse;
+import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/categories")
@@ -17,9 +17,10 @@ public class CategoryController {
     }
 
     @GetMapping
-    public List<CategoryResponse> getCategories() {
-        return categoryRepository.findAll().stream()
+    public ApiResponse<List<CategoryResponse>> getCategories() {
+        List<CategoryResponse> categories = categoryRepository.findAll().stream()
                 .map(CategoryResponse::from)
                 .toList();
+        return ApiResponse.success(categories);
     }
 }

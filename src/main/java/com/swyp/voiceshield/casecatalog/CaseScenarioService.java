@@ -1,11 +1,10 @@
 package com.swyp.voiceshield.casecatalog;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
+import com.swyp.voiceshield.exception.ApiException;
+import com.swyp.voiceshield.exception.ErrorCode;
 import java.util.Arrays;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CaseScenarioService {
@@ -18,7 +17,7 @@ public class CaseScenarioService {
 
     public CaseScenarioResponse getScenario(String scenarioId) {
         CaseScenario scenario = caseScenarioRepository.findWithCategoryAndVariantsById(scenarioId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case scenario not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.CASE_SCENARIO_NOT_FOUND));
         return CaseScenarioResponse.from(scenario);
     }
 
@@ -42,14 +41,14 @@ public class CaseScenarioService {
         CaseVariantOption selectedOption = variant.getOptions().stream()
                 .filter(option -> option.getId().equals(request.choiceOptionId()))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Choice option not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.CASE_CHOICE_OPTION_NOT_FOUND));
 
         return CaseChoiceEvaluationResponse.from(selectedOption);
     }
 
     private CaseScenario findScenario(String scenarioId) {
         return caseScenarioRepository.findWithCategoryAndVariantsById(scenarioId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case scenario not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.CASE_SCENARIO_NOT_FOUND));
     }
 
     private CaseVariant findVariant(CaseScenario scenario, String channel) {
@@ -57,14 +56,14 @@ public class CaseScenarioService {
         return scenario.getVariants().stream()
                 .filter(variant -> variant.getChannel() == caseChannel)
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Case variant not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.CASE_VARIANT_NOT_FOUND));
     }
 
     private CaseChannel parseChannel(String channel) {
         try {
             return CaseChannel.valueOf(channel.toUpperCase());
         } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported case channel");
+            throw new ApiException(ErrorCode.CASE_CHANNEL_NOT_SUPPORTED);
         }
     }
 }
