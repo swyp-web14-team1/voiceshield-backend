@@ -82,4 +82,22 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.optionNumber").value(2))
                 .andExpect(jsonPath("$.data.isCorrect").value(true));
     }
+
+    @Test
+    void returnsNotFoundForUnknownApi() throws Exception {
+        mockMvc.perform(get("/api/v1/unknown"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("COMMON-002"))
+                .andExpect(jsonPath("$.error.message").value("요청한 API를 찾을 수 없습니다."));
+    }
+
+    @Test
+    void returnsMethodNotAllowedForUnsupportedHttpMethod() throws Exception {
+        mockMvc.perform(post("/api/v1/categories"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("COMMON-004"))
+                .andExpect(jsonPath("$.error.message").value("지원하지 않는 HTTP 메서드입니다."));
+    }
 }
