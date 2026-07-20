@@ -32,6 +32,27 @@ class CaseCatalogApiTest {
     }
 
     @Test
+    void returnsCasesForSelectedCategory() throws Exception {
+        mockMvc.perform(get("/api/v1/categories/category-institution-impersonation/cases"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.categoryId").value("category-institution-impersonation"))
+                .andExpect(jsonPath("$.data.categoryName").value("기관 사칭"))
+                .andExpect(jsonPath("$.data.cases", hasSize(1)))
+                .andExpect(jsonPath("$.data.cases[0].scenarioId").value("case-fire-agency"))
+                .andExpect(jsonPath("$.data.cases[0].caseName").value("소방기관 사칭"));
+    }
+
+    @Test
+    void returnsNotFoundForUnknownCategory() throws Exception {
+        mockMvc.perform(get("/api/v1/categories/category-unknown/cases"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("CATEGORY-001"))
+                .andExpect(jsonPath("$.error.message").value("해당 카테고리를 찾을 수 없습니다."));
+    }
+
+    @Test
     void keepsMobileRepairAsItsOwnCategory() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-mobile-repair"))
                 .andExpect(status().isOk())
