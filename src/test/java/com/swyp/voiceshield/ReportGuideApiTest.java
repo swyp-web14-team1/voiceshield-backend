@@ -20,7 +20,7 @@ class ReportGuideApiTest {
 
     @Test
     void returnsReportGuideWithPreventionTips() throws Exception {
-        mockMvc.perform(get("/api/v1/report-guide"))
+        mockMvc.perform(get("/api/v1/report-guides"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.reportSteps", hasSize(3)))
