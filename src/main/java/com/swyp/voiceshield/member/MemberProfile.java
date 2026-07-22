@@ -47,6 +47,10 @@ public class MemberProfile {
         return memberId;
     }
 
+    public AppUser getUser() {
+        return user;
+    }
+
     public String getSignupStatus() {
         return signupStatus;
     }

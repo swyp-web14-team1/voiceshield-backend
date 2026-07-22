@@ -31,4 +31,15 @@ public class MemberService {
         );
         return new MemberResponse(memberProfile.getMemberId(), memberProfile.getSignupStatus());
     }
+
+    @Transactional(readOnly = true)
+    public MemberMeResponse getMyMemberProfile(String userId) {
+        MemberProfile memberProfile = memberProfileRepository.findByUser_UserId(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_PROFILE_NOT_FOUND));
+        return new MemberMeResponse(
+                memberProfile.getMemberId(),
+                memberProfile.getUser().getUserId(),
+                memberProfile.getSignupStatus()
+        );
+    }
 }

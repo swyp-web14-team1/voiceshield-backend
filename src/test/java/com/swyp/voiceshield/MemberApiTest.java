@@ -2,6 +2,8 @@ package com.swyp.voiceshield;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.swyp.voiceshield.member.MemberProfile;
+import com.swyp.voiceshield.member.MemberProfileRepository;
 import com.swyp.voiceshield.user.AppUser;
 import com.swyp.voiceshield.user.AppUserRepository;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,6 +33,9 @@ class MemberApiTest {
 
     @Autowired
     private AppUserRepository appUserRepository;
+
+    @Autowired
+    private MemberProfileRepository memberProfileRepository;
 
     @Test
     void createMemberStoresBasicUserInformationAndCompletesSignup() throws Exception {
@@ -60,5 +66,30 @@ class MemberApiTest {
                 .get()
                 .extracting(AppUser::getSignupStatus)
                 .isEqualTo("SIGNUP_COMPLETE");
+    }
+
+    @Test
+    void getMyMemberProfileIdentifiesCurrentUserByUserIdHeader() throws Exception {
+        AppUser user = appUserRepository.save(AppUser.createKakao("kakao-member-me", LocalDateTime.now()));
+        user.completeSignup();
+        MemberProfile memberProfile = memberProfileRepository.save(
+                MemberProfile.create(user, "SIGNUP_COMPLETE", LocalDateTime.now())
+        );
+
+        mockMvc.perform(get("/api/v1/members/me")
+                        .header("X-User-Id", user.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.memberId").value(memberProfile.getMemberId()))
+                .andExpect(jsonPath("$.data.userId").value(user.getUserId()))
+                .andExpect(jsonPath("$.data.signupStatus").value("SIGNUP_COMPLETE"));
+    }
+
+    @Test
+    void getMyMemberProfileRequiresUserIdHeader() throws Exception {
+        mockMvc.perform(get("/api/v1/members/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("AUTH-001"));
     }
 }
