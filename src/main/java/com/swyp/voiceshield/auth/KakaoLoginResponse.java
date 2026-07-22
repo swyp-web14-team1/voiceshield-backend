@@ -1,7 +1,8 @@
 package com.swyp.voiceshield.auth;
 
 public record KakaoLoginResponse(
-        String kakaoProviderUserId,
-        String loginResult
+        String userId,
+        String loginResult,
+        String signupStatus
 ) {
 }

@@ -2,6 +2,7 @@ package com.swyp.voiceshield.auth;
 
 import com.swyp.voiceshield.common.response.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +23,8 @@ public class AuthController {
     public ResponseEntity<ApiResponse<KakaoLoginResponse>> loginWithKakao(
             @Valid @RequestBody KakaoLoginRequest request
     ) {
-        KakaoLoginResponse response = authService.loginWithKakao(request.kakaoAuthCode());
-        return ResponseEntity.ok(ApiResponse.success(response));
+        KakaoLoginResult result = authService.loginWithKakao(request.kakaoAuthCode());
+        HttpStatus status = result.created() ? HttpStatus.CREATED : HttpStatus.OK;
+        return ResponseEntity.status(status).body(ApiResponse.success(result.response()));
     }
 }
