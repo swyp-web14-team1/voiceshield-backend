@@ -11,6 +11,8 @@ public enum ErrorCode {
 
     KAKAO_AUTH_FAILED(HttpStatus.UNAUTHORIZED, "AUTH-002", "카카오 로그인 인증에 실패했습니다."),
 
+    USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "USER-001", "사용자를 찾을 수 없습니다."),
+
     CASE_SCENARIO_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-001", "해당 사례 시나리오를 찾을 수 없습니다."),
     CASE_VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-002", "해당 사례 버전을 찾을 수 없습니다."),
     CASE_CHOICE_OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-003", "해당 선택지를 찾을 수 없습니다."),

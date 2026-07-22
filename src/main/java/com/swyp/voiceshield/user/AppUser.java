@@ -64,6 +64,10 @@ public class AppUser {
         this.lastLoginAt = lastLoginAt;
     }
 
+    public void completeSignup() {
+        this.signupStatus = "SIGNUP_COMPLETE";
+    }
+
     public String getUserId() {
         return userId;
     }
