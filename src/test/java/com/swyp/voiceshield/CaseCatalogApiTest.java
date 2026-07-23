@@ -136,12 +136,48 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsScenarioStepWithoutQuizWhenVariantHasNoSeededQuizYet() throws Exception {
+    void returnsReturnDeliveryVoiceScenarioStepWithQuizAndChoices() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-return-delivery/variants/voice/scenario-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-return-delivery"))
                 .andExpect(jsonPath("$.data.variantId").value("case-return-delivery-voice"))
+                .andExpect(jsonPath("$.data.channel").value("VOICE"))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-voice-quiz-1"))
+                .andExpect(jsonPath("$.data.quiz.quizNumber").value(1))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 판단할 수 있는 결정적인 단서를 모두 선택하세요."))
+                .andExpect(jsonPath("$.data.choices", hasSize(3)))
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("택배 기사가 방문 전 전화한다."))
+                .andExpect(jsonPath("$.data.choices[0].isCorrect").value(false))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("개인 휴대전화 번호로 주소를 다시 요구한다."))
+                .andExpect(jsonPath("$.data.choices[1].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("문자 링크 접속 및 앱 설치를 요구한다."))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true));
+    }
+
+    @Test
+    void evaluatesSelectedReturnDeliveryVoiceScenarioChoice() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-return-delivery/variants/voice/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-return-delivery-voice-option-3\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-return-delivery-voice-option-3"))
+                .andExpect(jsonPath("$.data.optionNumber").value(3))
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-voice-quiz-1"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("문자 링크 접속 및 앱 설치를 요구한다."))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-return-delivery-voice-option-3"))
+                .andExpect(jsonPath("$.data.explanation").value("택배 기사가 방문 전에 연락하는 것은 일반적인 상황일 수 있습니다. 하지만 개인 번호를 이용해 개인정보를 다시 요구하거나, 문자 링크를 통한 주소 입력과 앱 설치를 요구하는 경우는 대표적인 택배 사칭 피싱 수법입니다."));
+    }
+
+    @Test
+    void returnsScenarioStepWithoutQuizWhenVariantHasNoSeededQuizYet() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/voice/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-fire-agency"))
+                .andExpect(jsonPath("$.data.variantId").value("case-fire-agency-voice"))
                 .andExpect(jsonPath("$.data.channel").value("VOICE"))
                 .andExpect(jsonPath("$.data.quiz").value(nullValue()))
                 .andExpect(jsonPath("$.data.scriptLines", hasSize(0)))

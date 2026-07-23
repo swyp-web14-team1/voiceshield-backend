@@ -45,4 +45,7 @@ VALUES
     ('case-mobile-repair-message-option-1', 'case-mobile-repair-message', 1, '새로운 번호 또는 임시폰으로 연락했다.', FALSE),
     ('case-mobile-repair-message-option-2', 'case-mobile-repair-message', 2, '병원비를 개인 계좌로 바로 송금해 달라고 했다.', TRUE),
     ('case-mobile-repair-message-option-3', 'case-mobile-repair-message', 3, '기존 번호로는 연락하지 말라고 했다.', FALSE),
-    ('case-mobile-repair-message-option-4', 'case-mobile-repair-message', 4, '다쳤다고 말했다.', FALSE);
+    ('case-mobile-repair-message-option-4', 'case-mobile-repair-message', 4, '다쳤다고 말했다.', FALSE),
+    ('case-return-delivery-voice-option-1', 'case-return-delivery-voice', 1, '택배 기사가 방문 전 전화한다.', FALSE),
+    ('case-return-delivery-voice-option-2', 'case-return-delivery-voice', 2, '개인 휴대전화 번호로 주소를 다시 요구한다.', TRUE),
+    ('case-return-delivery-voice-option-3', 'case-return-delivery-voice', 3, '문자 링크 접속 및 앱 설치를 요구한다.', TRUE);
