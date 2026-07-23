@@ -38,7 +38,7 @@ WHERE variant_id = 'case-mobile-repair-voice';
 
 INSERT INTO case_variant_options (option_id, variant_id, option_number, option_text, is_correct)
 VALUES
-    ('case-mobile-repair-voice-option-1', 'case-mobile-repair-voice', 1, '① 계좌번호를 받아 바로 송금한다.', FALSE),
-    ('case-mobile-repair-voice-option-2', 'case-mobile-repair-voice', 2, '② 기존에 저장된 아들 번호로 직접 전화한다.', TRUE),
-    ('case-mobile-repair-voice-option-3', 'case-mobile-repair-voice', 3, '③ 상대방이 알려준 계좌로 송금한다.', FALSE),
-    ('case-mobile-repair-voice-option-4', 'case-mobile-repair-voice', 4, '④ 전화를 끊고 다른 가족에게 먼저 확인한다.', TRUE);
+    ('case-mobile-repair-voice-option-1', 'case-mobile-repair-voice', 1, '휴대폰이 고장 나서 다른 번호로 연락했다고 말했다.', FALSE),
+    ('case-mobile-repair-voice-option-2', 'case-mobile-repair-voice', 2, '병원에서 치료를 받고 있다고 말했다.', FALSE),
+    ('case-mobile-repair-voice-option-3', 'case-mobile-repair-voice', 3, '병원비를 개인 계좌로 바로 송금해 달라고 했다.', TRUE),
+    ('case-mobile-repair-voice-option-4', 'case-mobile-repair-voice', 4, '간호사가 기다리고 있다고 말했다.', FALSE);

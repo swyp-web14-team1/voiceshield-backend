@@ -50,8 +50,9 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.variants.voice.content").value(containsString("휴대폰이 고장 나서")))
                 .andExpect(jsonPath("$.data.variants.voice.options", hasSize(4)))
                 .andExpect(jsonPath("$.data.variants.voice.options[1].optionNumber").value(2))
-                .andExpect(jsonPath("$.data.variants.voice.options[1].isCorrect").value(true))
-                .andExpect(jsonPath("$.data.variants.voice.options[3].isCorrect").value(true));
+                .andExpect(jsonPath("$.data.variants.voice.options[1].isCorrect").value(false))
+                .andExpect(jsonPath("$.data.variants.voice.options[2].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.variants.voice.options[3].isCorrect").value(false));
     }
 
     @Test
@@ -64,32 +65,35 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.channel").value("VOICE"))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-mobile-repair-voice-quiz-1"))
                 .andExpect(jsonPath("$.data.quiz.quizNumber").value(1))
-                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 판단할 수 있는 결정적인 단서는 무엇일까요?"))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 가장 강하게 의심할 수 있는 단서는 무엇일까요?"))
                 .andExpect(jsonPath("$.data.scriptLines", hasSize(23)))
                 .andExpect(jsonPath("$.data.scriptLines[0]").value("[전화벨]"))
                 .andExpect(jsonPath("$.data.scriptLines[1]").value("나"))
                 .andExpect(jsonPath("$.data.scriptLines[2]").value("\"여보세요?\""))
                 .andExpect(jsonPath("$.data.choices", hasSize(4)))
-                .andExpect(jsonPath("$.data.choices[1].optionText").value("기존에 저장된 아들 번호로 직접 전화한다."))
-                .andExpect(jsonPath("$.data.choices[1].isCorrect").value(true))
-                .andExpect(jsonPath("$.data.choices[3].isCorrect").value(true));
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("휴대폰이 고장 나서 다른 번호로 연락했다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("병원에서 치료를 받고 있다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("간호사가 기다리고 있다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true));
     }
 
     @Test
     void evaluatesSelectedVoiceScenarioChoice() throws Exception {
         mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/voice/choices")
                         .contentType("application/json")
-                        .content("{\"choiceOptionId\":\"case-mobile-repair-voice-option-2\"}"))
+                        .content("{\"choiceOptionId\":\"case-mobile-repair-voice-option-3\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.choiceOptionId").value("case-mobile-repair-voice-option-2"))
-                .andExpect(jsonPath("$.data.optionNumber").value(2))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-mobile-repair-voice-option-3"))
+                .andExpect(jsonPath("$.data.optionNumber").value(3))
                 .andExpect(jsonPath("$.data.isCorrect").value(true))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-mobile-repair-voice-quiz-1"))
-                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 판단할 수 있는 결정적인 단서는 무엇일까요?"))
-                .andExpect(jsonPath("$.data.selectedOption.optionId").value("case-mobile-repair-voice-option-2"))
-                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-mobile-repair-voice-option-2"))
-                .andExpect(jsonPath("$.data.explanation").value("낯선 사람이 알려준 연락처나 계좌를 그대로 이용하지 말고, 공식 대표번호나 기존에 저장된 번호로 직접 사실 여부를 확인해야 합니다."))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 가장 강하게 의심할 수 있는 단서는 무엇일까요?"))
+                .andExpect(jsonPath("$.data.selectedOption.optionId").value("case-mobile-repair-voice-option-3"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-mobile-repair-voice-option-3"))
+                .andExpect(jsonPath("$.data.explanation").value("휴대폰 고장이나 병원 치료는 실제로 발생할 수 있는 상황이며, 간호사가 기다리고 있다는 말도 긴급한 상황에서는 있을 수 있습니다. 하지만 전화로 개인 계좌에 즉시 송금을 요구하는 것은 가족 사칭 보이스피싱의 대표적인 수법입니다. 이런 전화를 받았다면 송금하기 전에 기존에 저장된 가족 연락처로 직접 확인하는 것이 가장 안전한 대응입니다."))
                 .andExpect(jsonPath("$.data.recommendedLearning.scenarioId").value("case-return-delivery"))
                 .andExpect(jsonPath("$.data.recommendedLearning.title").value("반품 택배"));
     }
