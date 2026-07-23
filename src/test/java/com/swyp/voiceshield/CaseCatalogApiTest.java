@@ -156,7 +156,7 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void evaluatesSelectedReturnDeliveryVoiceScenarioChoice() throws Exception {
+    void evaluatesPartiallySelectedReturnDeliveryVoiceScenarioChoiceAsIncorrect() throws Exception {
         mockMvc.perform(post("/api/v1/cases/case-return-delivery/variants/voice/choices")
                         .contentType("application/json")
                         .content("{\"choiceOptionId\":\"case-return-delivery-voice-option-3\"}"))
@@ -164,11 +164,29 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.choiceOptionId").value("case-return-delivery-voice-option-3"))
                 .andExpect(jsonPath("$.data.optionNumber").value(3))
-                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.isCorrect").value(false))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-voice-quiz-1"))
                 .andExpect(jsonPath("$.data.selectedOption.optionText").value("문자 링크 접속 및 앱 설치를 요구한다."))
-                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-return-delivery-voice-option-3"))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-return-delivery-voice-option-2"))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(2)))
                 .andExpect(jsonPath("$.data.explanation").value("택배 기사가 방문 전에 연락하는 것은 일반적인 상황일 수 있습니다. 하지만 개인 번호를 이용해 개인정보를 다시 요구하거나, 문자 링크를 통한 주소 입력과 앱 설치를 요구하는 경우는 대표적인 택배 사칭 피싱 수법입니다."));
+    }
+
+    @Test
+    void evaluatesSelectedReturnDeliveryVoiceScenarioChoices() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-return-delivery/variants/voice/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionIds\":[\"case-return-delivery-voice-option-2\",\"case-return-delivery-voice-option-3\"]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.choiceOptionIds", hasSize(2)))
+                .andExpect(jsonPath("$.data.choiceOptionIds[0]").value("case-return-delivery-voice-option-2"))
+                .andExpect(jsonPath("$.data.choiceOptionIds[1]").value("case-return-delivery-voice-option-3"))
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.selectedOptions", hasSize(2)))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(2)))
+                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-return-delivery-voice-option-2"))
+                .andExpect(jsonPath("$.data.correctOptions[1].optionId").value("case-return-delivery-voice-option-3"));
     }
 
     @Test
@@ -194,18 +212,21 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void evaluatesSelectedReturnDeliveryMessageScenarioChoice() throws Exception {
+    void evaluatesSelectedReturnDeliveryMessageScenarioChoices() throws Exception {
         mockMvc.perform(post("/api/v1/cases/case-return-delivery/variants/message/choices")
                         .contentType("application/json")
-                        .content("{\"choiceOptionId\":\"case-return-delivery-message-option-3\"}"))
+                        .content("{\"choiceOptionIds\":[\"case-return-delivery-message-option-2\",\"case-return-delivery-message-option-3\"]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.choiceOptionId").value("case-return-delivery-message-option-3"))
-                .andExpect(jsonPath("$.data.optionNumber").value(3))
+                .andExpect(jsonPath("$.data.choiceOptionIds", hasSize(2)))
+                .andExpect(jsonPath("$.data.choiceOptionIds[0]").value("case-return-delivery-message-option-2"))
+                .andExpect(jsonPath("$.data.choiceOptionIds[1]").value("case-return-delivery-message-option-3"))
                 .andExpect(jsonPath("$.data.isCorrect").value(true))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-message-quiz-1"))
-                .andExpect(jsonPath("$.data.selectedOption.optionText").value("개인정보를 다시 입력하도록 요구했다."))
-                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-return-delivery-message-option-3"))
+                .andExpect(jsonPath("$.data.selectedOptions", hasSize(2)))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(2)))
+                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-return-delivery-message-option-2"))
+                .andExpect(jsonPath("$.data.correctOptions[1].optionId").value("case-return-delivery-message-option-3"))
                 .andExpect(jsonPath("$.data.explanation").value("반품 신청 이후 문자가 오는 것 자체는 정상적인 상황일 수 있습니다. 하지만 출처가 불분명한 링크를 보내거나 개인정보를 다시 입력하도록 유도하는 경우는 대표적인 택배 피싱 수법입니다."));
     }
 

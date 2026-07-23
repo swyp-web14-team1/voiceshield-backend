@@ -4,8 +4,14 @@ import com.swyp.voiceshield.exception.ApiException;
 import com.swyp.voiceshield.exception.ErrorCode;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CaseScenarioService {
@@ -16,12 +22,14 @@ public class CaseScenarioService {
         this.caseScenarioRepository = caseScenarioRepository;
     }
 
+    @Transactional(readOnly = true)
     public CaseScenarioResponse getScenario(String scenarioId) {
         CaseScenario scenario = caseScenarioRepository.findWithCategoryAndVariantsById(scenarioId)
                 .orElseThrow(() -> new ApiException(ErrorCode.CASE_SCENARIO_NOT_FOUND));
         return CaseScenarioResponse.from(scenario);
     }
 
+    @Transactional(readOnly = true)
     public CaseScenarioStepResponse getScenarioStep(String scenarioId, String channel) {
         CaseScenario scenario = findScenario(scenarioId);
         CaseVariant variant = findVariant(scenario, channel);
@@ -30,6 +38,7 @@ public class CaseScenarioService {
         return CaseScenarioStepResponse.from(scenario, variant, scriptLines);
     }
 
+    @Transactional(readOnly = true)
     public CaseChoiceEvaluationResponse evaluateChoice(
             String scenarioId,
             String channel,
@@ -37,14 +46,12 @@ public class CaseScenarioService {
     ) {
         CaseScenario scenario = findScenario(scenarioId);
         CaseVariant variant = findVariant(scenario, channel);
-        CaseVariantOption selectedOption = variant.getOptions().stream()
-                .filter(option -> option.getId().equals(request.choiceOptionId()))
-                .findFirst()
-                .orElseThrow(() -> new ApiException(ErrorCode.CASE_CHOICE_OPTION_NOT_FOUND));
+        List<CaseVariantOption> selectedOptions = findSelectedOptions(variant, request.selectedChoiceOptionIds());
         CaseVariantQuiz quiz = ensureQuizExists(variant);
-        CaseVariantOption correctOption = findResultCorrectOption(variant, selectedOption);
+        List<CaseVariantOption> correctOptions = findCorrectOptions(variant);
+        boolean correct = selectedOptionIds(selectedOptions).equals(selectedOptionIds(correctOptions));
 
-        return CaseChoiceEvaluationResponse.from(quiz, selectedOption, correctOption);
+        return CaseChoiceEvaluationResponse.from(quiz, selectedOptions, correctOptions, correct);
     }
 
     private CaseScenario findScenario(String scenarioId) {
@@ -87,14 +94,38 @@ public class CaseScenarioService {
                 .toList();
     }
 
-    private CaseVariantOption findResultCorrectOption(CaseVariant variant, CaseVariantOption selectedOption) {
-        if (selectedOption.isCorrect()) {
-            return selectedOption;
+    private List<CaseVariantOption> findSelectedOptions(CaseVariant variant, List<String> choiceOptionIds) {
+        if (choiceOptionIds.isEmpty()) {
+            throw new ApiException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        return variant.getOptions().stream()
+        Map<String, CaseVariantOption> optionsById = variant.getOptions().stream()
+                .collect(Collectors.toMap(CaseVariantOption::getId, Function.identity()));
+        return new LinkedHashSet<>(choiceOptionIds).stream()
+                .map(optionId -> {
+                    CaseVariantOption option = optionsById.get(optionId);
+                    if (option == null) {
+                        throw new ApiException(ErrorCode.CASE_CHOICE_OPTION_NOT_FOUND);
+                    }
+                    return option;
+                })
+                .toList();
+    }
+
+    private List<CaseVariantOption> findCorrectOptions(CaseVariant variant) {
+        List<CaseVariantOption> correctOptions = variant.getOptions().stream()
                 .filter(CaseVariantOption::isCorrect)
-                .min(Comparator.comparingInt(CaseVariantOption::getOptionNumber))
-                .orElseThrow(() -> new ApiException(ErrorCode.CASE_CHOICE_OPTION_NOT_FOUND));
+                .sorted(Comparator.comparingInt(CaseVariantOption::getOptionNumber))
+                .toList();
+        if (correctOptions.isEmpty()) {
+            throw new ApiException(ErrorCode.CASE_CHOICE_OPTION_NOT_FOUND);
+        }
+        return correctOptions;
+    }
+
+    private Set<String> selectedOptionIds(List<CaseVariantOption> options) {
+        return options.stream()
+                .map(CaseVariantOption::getId)
+                .collect(Collectors.toSet());
     }
 }
