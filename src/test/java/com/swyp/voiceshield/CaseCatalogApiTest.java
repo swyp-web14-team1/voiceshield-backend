@@ -79,6 +79,25 @@ class CaseCatalogApiTest {
     }
 
     @Test
+    void returnsMessageScenarioStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/message/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-mobile-repair"))
+                .andExpect(jsonPath("$.data.variantId").value("case-mobile-repair-message"))
+                .andExpect(jsonPath("$.data.channel").value("MESSAGE"))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-mobile-repair-message-quiz-1"))
+                .andExpect(jsonPath("$.data.quiz.quizNumber").value(1))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 가족 사칭 메신저 피싱을 가장 강하게 의심해야 하는 상황은 무엇일까요?"))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("새로운 번호 또는 임시폰으로 연락했다."))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("기존 번호로는 연락하지 말라고 했다."))
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("다쳤다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[1].isCorrect").value(true));
+    }
+
+    @Test
     void evaluatesSelectedVoiceScenarioChoice() throws Exception {
         mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/voice/choices")
                         .contentType("application/json")
@@ -96,6 +115,24 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.explanation").value("휴대폰 고장이나 병원 치료는 실제로 발생할 수 있는 상황이며, 간호사가 기다리고 있다는 말도 긴급한 상황에서는 있을 수 있습니다. 하지만 전화로 개인 계좌에 즉시 송금을 요구하는 것은 가족 사칭 보이스피싱의 대표적인 수법입니다. 이런 전화를 받았다면 송금하기 전에 기존에 저장된 가족 연락처로 직접 확인하는 것이 가장 안전한 대응입니다."))
                 .andExpect(jsonPath("$.data.recommendedLearning.scenarioId").value("case-return-delivery"))
                 .andExpect(jsonPath("$.data.recommendedLearning.title").value("반품 택배"));
+    }
+
+    @Test
+    void evaluatesSelectedMessageScenarioChoice() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/message/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-mobile-repair-message-option-2\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-mobile-repair-message-option-2"))
+                .andExpect(jsonPath("$.data.optionNumber").value(2))
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-mobile-repair-message-quiz-1"))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 가족 사칭 메신저 피싱을 가장 강하게 의심해야 하는 상황은 무엇일까요?"))
+                .andExpect(jsonPath("$.data.selectedOption.optionId").value("case-mobile-repair-message-option-2"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-mobile-repair-message-option-2"))
+                .andExpect(jsonPath("$.data.explanation").value("새로운 번호로 연락하거나, 다쳤다고 말하는 것은 실제 상황에서도 발생할 수 있습니다. 하지만 개인 계좌로 즉시 송금을 요구하는 행동은 가족 사칭 메신저 피싱에서 자주 사용되는 대표적인 수법입니다. 송금을 하기 전에는 반드시 기존에 알고 있던 전화번호로 직접 연락하여 사실 여부를 확인하는 것이 중요합니다."));
     }
 
     @Test

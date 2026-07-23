@@ -41,4 +41,8 @@ VALUES
     ('case-mobile-repair-voice-option-1', 'case-mobile-repair-voice', 1, '휴대폰이 고장 나서 다른 번호로 연락했다고 말했다.', FALSE),
     ('case-mobile-repair-voice-option-2', 'case-mobile-repair-voice', 2, '병원에서 치료를 받고 있다고 말했다.', FALSE),
     ('case-mobile-repair-voice-option-3', 'case-mobile-repair-voice', 3, '병원비를 개인 계좌로 바로 송금해 달라고 했다.', TRUE),
-    ('case-mobile-repair-voice-option-4', 'case-mobile-repair-voice', 4, '간호사가 기다리고 있다고 말했다.', FALSE);
+    ('case-mobile-repair-voice-option-4', 'case-mobile-repair-voice', 4, '간호사가 기다리고 있다고 말했다.', FALSE),
+    ('case-mobile-repair-message-option-1', 'case-mobile-repair-message', 1, '새로운 번호 또는 임시폰으로 연락했다.', FALSE),
+    ('case-mobile-repair-message-option-2', 'case-mobile-repair-message', 2, '병원비를 개인 계좌로 바로 송금해 달라고 했다.', TRUE),
+    ('case-mobile-repair-message-option-3', 'case-mobile-repair-message', 3, '기존 번호로는 연락하지 말라고 했다.', FALSE),
+    ('case-mobile-repair-message-option-4', 'case-mobile-repair-message', 4, '다쳤다고 말했다.', FALSE);
