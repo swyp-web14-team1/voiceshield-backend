@@ -48,4 +48,8 @@ VALUES
     ('case-mobile-repair-message-option-4', 'case-mobile-repair-message', 4, '다쳤다고 말했다.', FALSE),
     ('case-return-delivery-voice-option-1', 'case-return-delivery-voice', 1, '택배 기사가 방문 전 전화한다.', FALSE),
     ('case-return-delivery-voice-option-2', 'case-return-delivery-voice', 2, '개인 휴대전화 번호로 주소를 다시 요구한다.', TRUE),
-    ('case-return-delivery-voice-option-3', 'case-return-delivery-voice', 3, '문자 링크 접속 및 앱 설치를 요구한다.', TRUE);
+    ('case-return-delivery-voice-option-3', 'case-return-delivery-voice', 3, '문자 링크 접속 및 앱 설치를 요구한다.', TRUE),
+    ('case-return-delivery-message-option-1', 'case-return-delivery-message', 1, '반품 신청 후 문자가 왔다.', FALSE),
+    ('case-return-delivery-message-option-2', 'case-return-delivery-message', 2, '공식 홈페이지가 아닌 단축 URL 링크를 보냈다.', TRUE),
+    ('case-return-delivery-message-option-3', 'case-return-delivery-message', 3, '개인정보를 다시 입력하도록 요구했다.', TRUE),
+    ('case-return-delivery-message-option-4', 'case-return-delivery-message', 4, '택배 관련 문자가 왔다.', FALSE);
