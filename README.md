@@ -138,3 +138,13 @@ src
 - ✅ Quiz
 - ✅ Learning History
 - ✅ Accessibility Settings
+
+## 🐘 Local PostgreSQL
+
+1. Create a local `.env` file from `.env.example`.
+2. Start PostgreSQL with `docker compose up -d`.
+3. Run the application with the `local` profile enabled:
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=local'
+```
