@@ -36,6 +36,54 @@ SET content = '[전화벨]' || CHR(10) ||
               '먼저 보내줘."'
 WHERE variant_id = 'case-mobile-repair-voice';
 
+UPDATE case_variants
+SET content = '모르는 번호로 전화가 걸려왔습니다.' || CHR(10) ||
+              '상대는 자녀라고 자신을 소개하며 휴대폰이 고장 나 새 번호로 연락했다고 말합니다. 이어서 급하게 결제할 일이 생겼다며 대신 송금을 부탁합니다.' || CHR(10) ||
+              '[전화벨]' || CHR(10) ||
+              '나' || CHR(10) ||
+              '"여보세요?"' || CHR(10) ||
+              '상대' || CHR(10) ||
+              '"엄마(아빠), 나야.' || CHR(10) ||
+              '휴대폰이 갑자기 고장 나서' || CHR(10) ||
+              '새 번호로 연락했어."' || CHR(10) ||
+              '나' || CHR(10) ||
+              '"무슨 일이야?"' || CHR(10) ||
+              '상대' || CHR(10) ||
+              '"지금 급하게 결제해야 하는데' || CHR(10) ||
+              '계좌이체가 안 돼.' || CHR(10) ||
+              '85만 원만 먼저 보내줄 수 있어?' || CHR(10) ||
+              '내일 바로 돌려줄게."' || CHR(10) ||
+              '나' || CHR(10) ||
+              '"기존 번호는 어떻게 된 거야?"' || CHR(10) ||
+              '상대' || CHR(10) ||
+              '"지금 배터리도 거의 없고' || CHR(10) ||
+              '오래 통화하기 어려워.' || CHR(10) ||
+              '내가 계좌번호 문자로 보내줄게.' || CHR(10) ||
+              '부탁해."'
+WHERE variant_id = 'case-new-number-family-transfer-voice';
+
+UPDATE case_variants
+SET content = '메신저로 자녀를 사칭한 사람이 급하게 연락을 보내왔습니다.' || CHR(10) ||
+              '휴대폰이 고장 났다며 새 번호로 연락 중이라고 하고, 급한 결제가 필요하다며 대신 송금을 부탁합니다.' || CHR(10) ||
+              '딸' || CHR(10) ||
+              '엄마 나야.' || CHR(10) ||
+              '휴대폰이 갑자기 고장 나서' || CHR(10) ||
+              '새 번호로 연락해.' || CHR(10) ||
+              '기존 번호는 지금 사용할 수 없어.' || CHR(10) ||
+              '----------------------------' || CHR(10) ||
+              '딸' || CHR(10) ||
+              '지금 급하게 결제해야 하는데' || CHR(10) ||
+              '계좌이체가 안 돼.' || CHR(10) ||
+              '엄마가 대신 85만 원만' || CHR(10) ||
+              '먼저 보내줄 수 있어?' || CHR(10) ||
+              '내일 바로 돌려줄게.' || CHR(10) ||
+              '----------------------------' || CHR(10) ||
+              '딸' || CHR(10) ||
+              '지금 통화는 안 돼.' || CHR(10) ||
+              '메신저로만 부탁할게.' || CHR(10) ||
+              '계좌번호 보낼게.'
+WHERE variant_id = 'case-new-number-family-transfer-message';
+
 INSERT INTO case_variant_options (option_id, variant_id, option_number, option_text, is_correct)
 VALUES
     ('case-mobile-repair-voice-option-1', 'case-mobile-repair-voice', 1, '휴대폰이 고장 나서 다른 번호로 연락했다고 말했다.', FALSE),
@@ -60,4 +108,12 @@ VALUES
     ('case-special-investment-message-option-1', 'case-special-investment-message', 1, 'AI 반도체 투자 상품이라고 소개했다.', FALSE),
     ('case-special-investment-message-option-2', 'case-special-investment-message', 2, '오늘까지만 가입할 수 있다고 안내했다.', FALSE),
     ('case-special-investment-message-option-3', 'case-special-investment-message', 3, '원금 보장과 월 20% 수익을 약속했다.', TRUE),
-    ('case-special-investment-message-option-4', 'case-special-investment-message', 4, 'VIP 고객 대상으로 안내했다고 말했다.', FALSE);
+    ('case-special-investment-message-option-4', 'case-special-investment-message', 4, 'VIP 고객 대상으로 안내했다고 말했다.', FALSE),
+    ('case-new-number-family-transfer-voice-option-1', 'case-new-number-family-transfer-voice', 1, '휴대폰이 고장 났다고 말했다.', FALSE),
+    ('case-new-number-family-transfer-voice-option-2', 'case-new-number-family-transfer-voice', 2, '급하게 결제가 필요하다고 말했다.', FALSE),
+    ('case-new-number-family-transfer-voice-option-3', 'case-new-number-family-transfer-voice', 3, '새 번호로 연락해 즉시 송금을 요청했다.', TRUE),
+    ('case-new-number-family-transfer-voice-option-4', 'case-new-number-family-transfer-voice', 4, '내일 돈을 돌려주겠다고 말했다.', FALSE),
+    ('case-new-number-family-transfer-message-option-1', 'case-new-number-family-transfer-message', 1, '휴대폰이 고장 나 새 번호로 연락했다고 말했다.', FALSE),
+    ('case-new-number-family-transfer-message-option-2', 'case-new-number-family-transfer-message', 2, '결제가 급하다고 말했다.', FALSE),
+    ('case-new-number-family-transfer-message-option-3', 'case-new-number-family-transfer-message', 3, '통화는 안 된다며 메신저로만 송금을 요청했다.', TRUE),
+    ('case-new-number-family-transfer-message-option-4', 'case-new-number-family-transfer-message', 4, '내일 돈을 돌려주겠다고 말했다.', FALSE);

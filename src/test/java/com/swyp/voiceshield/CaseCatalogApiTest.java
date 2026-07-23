@@ -286,6 +286,90 @@ class CaseCatalogApiTest {
     }
 
     @Test
+    void returnsNewNumberFamilyTransferScenarioWithMessageAndVoiceVariants() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-new-number-family-transfer"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-new-number-family-transfer"))
+                .andExpect(jsonPath("$.data.caseName").value("새 번호로 온 가족의 송금 요청"))
+                .andExpect(jsonPath("$.data.variants.message.channel").value("MESSAGE"))
+                .andExpect(jsonPath("$.data.variants.message.content").value(containsString("메신저로 자녀를 사칭한 사람이 급하게 연락을 보내왔습니다.")))
+                .andExpect(jsonPath("$.data.variants.voice.channel").value("VOICE"))
+                .andExpect(jsonPath("$.data.variants.voice.content").value(containsString("모르는 번호로 전화가 걸려왔습니다.")));
+    }
+
+    @Test
+    void returnsNewNumberFamilyTransferVoiceScenarioStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-new-number-family-transfer/variants/voice/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-new-number-family-transfer"))
+                .andExpect(jsonPath("$.data.variantId").value("case-new-number-family-transfer-voice"))
+                .andExpect(jsonPath("$.data.channel").value("VOICE"))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-new-number-family-transfer-voice-quiz-1"))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 판단할 수 있는 가장 결정적인 단서는 무엇일까요?"))
+                .andExpect(jsonPath("$.data.scriptLines[0]").value("모르는 번호로 전화가 걸려왔습니다."))
+                .andExpect(jsonPath("$.data.scriptLines[2]").value("[전화벨]"))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("휴대폰이 고장 났다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("급하게 결제가 필요하다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("새 번호로 연락해 즉시 송금을 요청했다."))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("내일 돈을 돌려주겠다고 말했다."));
+    }
+
+    @Test
+    void evaluatesSelectedNewNumberFamilyTransferVoiceScenarioChoice() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-new-number-family-transfer/variants/voice/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-new-number-family-transfer-voice-option-3\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-new-number-family-transfer-voice-option-3"))
+                .andExpect(jsonPath("$.data.optionNumber").value(3))
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-new-number-family-transfer-voice-quiz-1"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("새 번호로 연락해 즉시 송금을 요청했다."))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-new-number-family-transfer-voice-option-3"))
+                .andExpect(jsonPath("$.data.explanation").value("휴대폰 고장이나 급한 결제 상황은 실제로도 발생할 수 있습니다. 하지만 새 번호로 연락해 곧바로 송금을 요청하는 것은 가족 사칭 사기의 대표적인 특징입니다. 이럴 때는 절대로 바로 송금하지 말고, 기존에 저장된 연락처로 직접 전화하거나 다른 가족을 통해 사실 여부를 확인해야 합니다."));
+    }
+
+    @Test
+    void returnsNewNumberFamilyTransferMessageScenarioStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-new-number-family-transfer/variants/message/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-new-number-family-transfer"))
+                .andExpect(jsonPath("$.data.variantId").value("case-new-number-family-transfer-message"))
+                .andExpect(jsonPath("$.data.channel").value("MESSAGE"))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-new-number-family-transfer-message-quiz-1"))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 메신저사기임을 판단할 수 있는 가장 결정적인 단서는 무엇일까요?"))
+                .andExpect(jsonPath("$.data.scriptLines[0]").value("메신저로 자녀를 사칭한 사람이 급하게 연락을 보내왔습니다."))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("휴대폰이 고장 나 새 번호로 연락했다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("결제가 급하다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("통화는 안 된다며 메신저로만 송금을 요청했다."))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("내일 돈을 돌려주겠다고 말했다."));
+    }
+
+    @Test
+    void evaluatesSelectedNewNumberFamilyTransferMessageScenarioChoice() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-new-number-family-transfer/variants/message/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-new-number-family-transfer-message-option-3\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-new-number-family-transfer-message-option-3"))
+                .andExpect(jsonPath("$.data.optionNumber").value(3))
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-new-number-family-transfer-message-quiz-1"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("통화는 안 된다며 메신저로만 송금을 요청했다."))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-new-number-family-transfer-message-option-3"))
+                .andExpect(jsonPath("$.data.explanation").value("휴대폰 고장이나 급한 결제 상황은 실제로도 발생할 수 있습니다. 하지만 통화를 계속 피하면서 메신저로만 송금을 요구하는 것은 메신저사기의 대표적인 특징입니다. 이럴 때는 절대로 바로 송금하지 말고, 기존에 저장된 연락처로 직접 전화하거나 다른 가족을 통해 사실 여부를 확인해야 합니다."));
+    }
+
+    @Test
     void returnsScenarioStepWithoutQuizWhenVariantHasNoSeededQuizYet() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/voice/scenario-step"))
                 .andExpect(status().isOk())
