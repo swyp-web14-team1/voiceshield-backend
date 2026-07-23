@@ -3,6 +3,7 @@ package com.swyp.voiceshield.casecatalog;
 import com.swyp.voiceshield.exception.ApiException;
 import com.swyp.voiceshield.exception.ErrorCode;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class CaseScenarioService {
     public CaseScenarioStepResponse getScenarioStep(String scenarioId, String channel) {
         CaseScenario scenario = findScenario(scenarioId);
         CaseVariant variant = findVariant(scenario, channel);
+        ensureQuizExists(variant);
         List<String> scriptLines = Arrays.stream(variant.getContent().split("\\R"))
                 .filter(line -> !line.isBlank())
                 .toList();
@@ -42,8 +44,10 @@ public class CaseScenarioService {
                 .filter(option -> option.getId().equals(request.choiceOptionId()))
                 .findFirst()
                 .orElseThrow(() -> new ApiException(ErrorCode.CASE_CHOICE_OPTION_NOT_FOUND));
+        CaseVariantQuiz quiz = ensureQuizExists(variant);
+        CaseVariantOption correctOption = findResultCorrectOption(variant, selectedOption);
 
-        return CaseChoiceEvaluationResponse.from(selectedOption);
+        return CaseChoiceEvaluationResponse.from(quiz, selectedOption, correctOption);
     }
 
     private CaseScenario findScenario(String scenarioId) {
@@ -65,5 +69,24 @@ public class CaseScenarioService {
         } catch (IllegalArgumentException exception) {
             throw new ApiException(ErrorCode.CASE_CHANNEL_NOT_SUPPORTED);
         }
+    }
+
+    private CaseVariantQuiz ensureQuizExists(CaseVariant variant) {
+        CaseVariantQuiz quiz = variant.getQuiz();
+        if (quiz == null) {
+            throw new ApiException(ErrorCode.CASE_VARIANT_NOT_FOUND);
+        }
+        return quiz;
+    }
+
+    private CaseVariantOption findResultCorrectOption(CaseVariant variant, CaseVariantOption selectedOption) {
+        if (selectedOption.isCorrect()) {
+            return selectedOption;
+        }
+
+        return variant.getOptions().stream()
+                .filter(CaseVariantOption::isCorrect)
+                .min(Comparator.comparingInt(CaseVariantOption::getOptionNumber))
+                .orElseThrow(() -> new ApiException(ErrorCode.CASE_CHOICE_OPTION_NOT_FOUND));
     }
 }

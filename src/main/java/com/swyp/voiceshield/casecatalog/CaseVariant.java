@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.util.LinkedHashSet;
@@ -36,6 +37,9 @@ public class CaseVariant {
     @OneToMany(mappedBy = "variant", fetch = FetchType.LAZY)
     private Set<CaseVariantOption> options = new LinkedHashSet<>();
 
+    @OneToOne(mappedBy = "variant", fetch = FetchType.LAZY)
+    private CaseVariantQuiz quiz;
+
     protected CaseVariant() {
     }
 
@@ -53,5 +57,9 @@ public class CaseVariant {
 
     public Set<CaseVariantOption> getOptions() {
         return options;
+    }
+
+    public CaseVariantQuiz getQuiz() {
+        return quiz;
     }
 }
