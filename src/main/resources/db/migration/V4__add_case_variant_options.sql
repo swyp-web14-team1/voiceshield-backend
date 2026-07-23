@@ -56,4 +56,8 @@ VALUES
     ('case-fire-agency-message-option-1', 'case-fire-agency-message', 1, '최근 소방시설법이 개정되었다고 안내했다.', FALSE),
     ('case-fire-agency-message-option-2', 'case-fire-agency-message', 2, '소방 안전점검이 예정되어 있다고 말했다.', FALSE),
     ('case-fire-agency-message-option-3', 'case-fire-agency-message', 3, '특정 업체에서만 장비를 구매하라고 안내했다.', TRUE),
-    ('case-fire-agency-message-option-4', 'case-fire-agency-message', 4, '정부 지원금을 받을 수 있다고 설명했다.', FALSE);
+    ('case-fire-agency-message-option-4', 'case-fire-agency-message', 4, '정부 지원금을 받을 수 있다고 설명했다.', FALSE),
+    ('case-special-investment-message-option-1', 'case-special-investment-message', 1, 'AI 반도체 투자 상품이라고 소개했다.', FALSE),
+    ('case-special-investment-message-option-2', 'case-special-investment-message', 2, '오늘까지만 가입할 수 있다고 안내했다.', FALSE),
+    ('case-special-investment-message-option-3', 'case-special-investment-message', 3, '원금 보장과 월 20% 수익을 약속했다.', TRUE),
+    ('case-special-investment-message-option-4', 'case-special-investment-message', 4, 'VIP 고객 대상으로 안내했다고 말했다.', FALSE);

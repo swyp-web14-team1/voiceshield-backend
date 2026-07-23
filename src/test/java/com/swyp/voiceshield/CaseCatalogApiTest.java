@@ -248,6 +248,44 @@ class CaseCatalogApiTest {
     }
 
     @Test
+    void returnsSpecialInvestmentMessageScenarioStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-special-investment/variants/message/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-special-investment"))
+                .andExpect(jsonPath("$.data.variantId").value("case-special-investment-message"))
+                .andExpect(jsonPath("$.data.channel").value("MESSAGE"))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-special-investment-message-quiz-1"))
+                .andExpect(jsonPath("$.data.quiz.quizNumber").value(1))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 투자사기임을 판단할 수 있는 가장 결정적인 단서는 무엇일까요?"))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("AI 반도체 투자 상품이라고 소개했다."))
+                .andExpect(jsonPath("$.data.choices[0].isCorrect").value(false))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("오늘까지만 가입할 수 있다고 안내했다."))
+                .andExpect(jsonPath("$.data.choices[1].isCorrect").value(false))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("원금 보장과 월 20% 수익을 약속했다."))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("VIP 고객 대상으로 안내했다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[3].isCorrect").value(false));
+    }
+
+    @Test
+    void evaluatesSelectedSpecialInvestmentMessageScenarioChoice() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-special-investment/variants/message/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-special-investment-message-option-3\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-special-investment-message-option-3"))
+                .andExpect(jsonPath("$.data.optionNumber").value(3))
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-special-investment-message-quiz-1"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("원금 보장과 월 20% 수익을 약속했다."))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-special-investment-message-option-3"))
+                .andExpect(jsonPath("$.data.explanation").value("AI 관련 투자 상품이나 VIP 대상 이벤트는 실제 금융상품에서도 있을 수 있습니다. 하지만 원금을 보장하면서 높은 수익을 동시에 약속하는 것은 대표적인 투자사기의 특징입니다. 또한 문자에 포함된 링크는 가짜 투자 사이트로 연결될 수 있으므로 절대 누르지 말고, 해당 금융회사가 실제 등록된 업체인지 공식 홈페이지나 금융당국을 통해 확인해야 합니다."));
+    }
+
+    @Test
     void returnsScenarioStepWithoutQuizWhenVariantHasNoSeededQuizYet() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/voice/scenario-step"))
                 .andExpect(status().isOk())
