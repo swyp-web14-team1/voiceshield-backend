@@ -52,4 +52,8 @@ VALUES
     ('case-return-delivery-message-option-1', 'case-return-delivery-message', 1, '반품 신청 후 문자가 왔다.', FALSE),
     ('case-return-delivery-message-option-2', 'case-return-delivery-message', 2, '공식 홈페이지가 아닌 단축 URL 링크를 보냈다.', TRUE),
     ('case-return-delivery-message-option-3', 'case-return-delivery-message', 3, '개인정보를 다시 입력하도록 요구했다.', TRUE),
-    ('case-return-delivery-message-option-4', 'case-return-delivery-message', 4, '택배 관련 문자가 왔다.', FALSE);
+    ('case-return-delivery-message-option-4', 'case-return-delivery-message', 4, '택배 관련 문자가 왔다.', FALSE),
+    ('case-fire-agency-message-option-1', 'case-fire-agency-message', 1, '최근 소방시설법이 개정되었다고 안내했다.', FALSE),
+    ('case-fire-agency-message-option-2', 'case-fire-agency-message', 2, '소방 안전점검이 예정되어 있다고 말했다.', FALSE),
+    ('case-fire-agency-message-option-3', 'case-fire-agency-message', 3, '특정 업체에서만 장비를 구매하라고 안내했다.', TRUE),
+    ('case-fire-agency-message-option-4', 'case-fire-agency-message', 4, '정부 지원금을 받을 수 있다고 설명했다.', FALSE);

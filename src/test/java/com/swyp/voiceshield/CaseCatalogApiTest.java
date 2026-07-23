@@ -210,6 +210,44 @@ class CaseCatalogApiTest {
     }
 
     @Test
+    void returnsFireAgencyMessageScenarioStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/message/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-fire-agency"))
+                .andExpect(jsonPath("$.data.variantId").value("case-fire-agency-message"))
+                .andExpect(jsonPath("$.data.channel").value("MESSAGE"))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-fire-agency-message-quiz-1"))
+                .andExpect(jsonPath("$.data.quiz.quizNumber").value(1))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 의심할 수 있는 결정적인 단서를 선택하세요."))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("최근 소방시설법이 개정되었다고 안내했다."))
+                .andExpect(jsonPath("$.data.choices[0].isCorrect").value(false))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("소방 안전점검이 예정되어 있다고 말했다."))
+                .andExpect(jsonPath("$.data.choices[1].isCorrect").value(false))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("특정 업체에서만 장비를 구매하라고 안내했다."))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("정부 지원금을 받을 수 있다고 설명했다."))
+                .andExpect(jsonPath("$.data.choices[3].isCorrect").value(false));
+    }
+
+    @Test
+    void evaluatesSelectedFireAgencyMessageScenarioChoice() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-fire-agency/variants/message/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-fire-agency-message-option-3\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-fire-agency-message-option-3"))
+                .andExpect(jsonPath("$.data.optionNumber").value(3))
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-fire-agency-message-quiz-1"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("특정 업체에서만 장비를 구매하라고 안내했다."))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-fire-agency-message-option-3"))
+                .andExpect(jsonPath("$.data.explanation").value("법령 개정, 안전점검, 정부 지원사업은 실제로 있을 수 있는 내용입니다. 하지만 공공기관이 특정 업체를 지정하여 구매를 유도하거나 결제를 요구하는 것은 매우 의심해야 할 신호입니다. 이런 안내를 받았다면 문자나 전화에 있는 번호를 이용하지 말고, 관할 시청이나 소방서의 공식 대표번호로 직접 확인해야 합니다."));
+    }
+
+    @Test
     void returnsScenarioStepWithoutQuizWhenVariantHasNoSeededQuizYet() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/voice/scenario-step"))
                 .andExpect(status().isOk())
