@@ -25,10 +25,7 @@ public class CaseScenarioService {
     public CaseScenarioStepResponse getScenarioStep(String scenarioId, String channel) {
         CaseScenario scenario = findScenario(scenarioId);
         CaseVariant variant = findVariant(scenario, channel);
-        ensureQuizExists(variant);
-        List<String> scriptLines = Arrays.stream(variant.getContent().split("\\R"))
-                .filter(line -> !line.isBlank())
-                .toList();
+        List<String> scriptLines = splitScriptLines(variant);
 
         return CaseScenarioStepResponse.from(scenario, variant, scriptLines);
     }
@@ -77,6 +74,17 @@ public class CaseScenarioService {
             throw new ApiException(ErrorCode.CASE_VARIANT_NOT_FOUND);
         }
         return quiz;
+    }
+
+    private List<String> splitScriptLines(CaseVariant variant) {
+        String content = variant.getContent();
+        if (content == null || content.isBlank()) {
+            return List.of();
+        }
+
+        return Arrays.stream(content.split("\\R"))
+                .filter(line -> !line.isBlank())
+                .toList();
     }
 
     private CaseVariantOption findResultCorrectOption(CaseVariant variant, CaseVariantOption selectedOption) {

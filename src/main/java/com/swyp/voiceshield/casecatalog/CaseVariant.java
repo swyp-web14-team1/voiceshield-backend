@@ -9,10 +9,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -37,8 +39,8 @@ public class CaseVariant {
     @OneToMany(mappedBy = "variant", fetch = FetchType.LAZY)
     private Set<CaseVariantOption> options = new LinkedHashSet<>();
 
-    @OneToOne(mappedBy = "variant", fetch = FetchType.LAZY)
-    private CaseVariantQuiz quiz;
+    @OneToMany(mappedBy = "variant", fetch = FetchType.LAZY)
+    private List<CaseVariantQuiz> quizzes = new ArrayList<>();
 
     protected CaseVariant() {
     }
@@ -60,6 +62,8 @@ public class CaseVariant {
     }
 
     public CaseVariantQuiz getQuiz() {
-        return quiz;
+        return quizzes.stream()
+                .min(Comparator.comparingInt(CaseVariantQuiz::getQuizNumber))
+                .orElse(null);
     }
 }

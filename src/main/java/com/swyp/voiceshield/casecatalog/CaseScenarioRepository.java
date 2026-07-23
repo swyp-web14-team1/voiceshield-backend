@@ -7,6 +7,6 @@ import java.util.Optional;
 
 public interface CaseScenarioRepository extends JpaRepository<CaseScenario, String> {
 
-    @EntityGraph(attributePaths = {"category", "variants", "variants.options", "variants.quiz", "variants.quiz.recommendedScenario"})
+    @EntityGraph(attributePaths = {"category", "variants", "variants.options", "variants.quizzes", "variants.quizzes.recommendedScenario"})
     Optional<CaseScenario> findWithCategoryAndVariantsById(String id);
 }

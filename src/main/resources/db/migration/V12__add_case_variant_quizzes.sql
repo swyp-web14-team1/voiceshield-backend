@@ -1,6 +1,6 @@
 CREATE TABLE case_variant_quizzes (
     quiz_id VARCHAR(255) PRIMARY KEY,
-    variant_id VARCHAR(255) NOT NULL UNIQUE,
+    variant_id VARCHAR(255) NOT NULL,
     quiz_number INTEGER NOT NULL,
     question TEXT NOT NULL,
     explanation TEXT NOT NULL,
@@ -8,7 +8,9 @@ CREATE TABLE case_variant_quizzes (
     CONSTRAINT fk_case_variant_quizzes_variant
         FOREIGN KEY (variant_id) REFERENCES case_variants (variant_id),
     CONSTRAINT fk_case_variant_quizzes_recommended_scenario
-        FOREIGN KEY (recommended_scenario_id) REFERENCES case_scenarios (scenario_id)
+        FOREIGN KEY (recommended_scenario_id) REFERENCES case_scenarios (scenario_id),
+    CONSTRAINT uk_case_variant_quizzes_variant_number
+        UNIQUE (variant_id, quiz_number)
 );
 
 INSERT INTO case_variant_quizzes (

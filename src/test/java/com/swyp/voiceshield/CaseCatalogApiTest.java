@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -90,7 +91,20 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.correctOption.optionId").value("case-mobile-repair-voice-option-2"))
                 .andExpect(jsonPath("$.data.explanation").value("낯선 사람이 알려준 연락처나 계좌를 그대로 이용하지 말고, 공식 대표번호나 기존에 저장된 번호로 직접 사실 여부를 확인해야 합니다."))
                 .andExpect(jsonPath("$.data.recommendedLearning.scenarioId").value("case-return-delivery"))
-                .andExpect(jsonPath("$.data.recommendedLearning.title").value("諛섑뭹 ?앸같"));
+                .andExpect(jsonPath("$.data.recommendedLearning.title").value("반품 택배"));
+    }
+
+    @Test
+    void returnsScenarioStepWithoutQuizWhenVariantHasNoSeededQuizYet() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-return-delivery/variants/voice/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-return-delivery"))
+                .andExpect(jsonPath("$.data.variantId").value("case-return-delivery-voice"))
+                .andExpect(jsonPath("$.data.channel").value("VOICE"))
+                .andExpect(jsonPath("$.data.quiz").value(nullValue()))
+                .andExpect(jsonPath("$.data.scriptLines", hasSize(0)))
+                .andExpect(jsonPath("$.data.choices", hasSize(0)));
     }
 
     @Test

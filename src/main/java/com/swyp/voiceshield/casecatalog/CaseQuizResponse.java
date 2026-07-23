@@ -7,6 +7,10 @@ public record CaseQuizResponse(
 ) {
 
     static CaseQuizResponse from(CaseVariantQuiz quiz) {
+        if (quiz == null) {
+            return null;
+        }
+
         return new CaseQuizResponse(
                 quiz.getId(),
                 quiz.getQuizNumber(),
