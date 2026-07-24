@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface MemberProfileRepository extends JpaRepository<MemberProfile, String> {
 
     Optional<MemberProfile> findByUser_UserId(String userId);
+
+    void deleteByUser_UserId(String userId);
 }

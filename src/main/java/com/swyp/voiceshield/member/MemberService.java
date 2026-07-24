@@ -42,4 +42,12 @@ public class MemberService {
                 memberProfile.getSignupStatus()
         );
     }
+
+    @Transactional
+    public void withdrawMember(String userId) {
+        AppUser user = appUserRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
+        memberProfileRepository.deleteByUser_UserId(userId);
+        appUserRepository.delete(user);
+    }
 }

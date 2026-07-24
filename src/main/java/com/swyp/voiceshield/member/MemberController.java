@@ -6,6 +6,7 @@ import com.swyp.voiceshield.common.identity.UserIdentifierResolver;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,5 +40,14 @@ public class MemberController {
     ) {
         UserIdentifier userIdentifier = userIdentifierResolver.requireUser(userId);
         return ApiResponse.success(memberService.getMyMemberProfile(userIdentifier.userId()));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> withdrawMyMembership(
+            @RequestHeader(value = UserIdentifierResolver.USER_ID_HEADER, required = false) String userId
+    ) {
+        UserIdentifier userIdentifier = userIdentifierResolver.requireUser(userId);
+        memberService.withdrawMember(userIdentifier.userId());
+        return ResponseEntity.noContent().build();
     }
 }

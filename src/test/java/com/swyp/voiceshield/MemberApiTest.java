@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -91,5 +92,21 @@ class MemberApiTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("AUTH-001"));
+    }
+
+    @Test
+    void withdrawCurrentMemberDeletesMemberProfileAndUser() throws Exception {
+        AppUser user = appUserRepository.save(AppUser.createKakao("kakao-member-withdraw", LocalDateTime.now()));
+        user.completeSignup();
+        MemberProfile memberProfile = memberProfileRepository.save(
+                MemberProfile.create(user, "SIGNUP_COMPLETE", LocalDateTime.now())
+        );
+
+        mockMvc.perform(delete("/api/v1/members/me")
+                        .header("X-User-Id", user.getUserId()))
+                .andExpect(status().isNoContent());
+
+        assertThat(memberProfileRepository.findById(memberProfile.getMemberId())).isNotPresent();
+        assertThat(appUserRepository.findById(user.getUserId())).isNotPresent();
     }
 }
