@@ -1,8 +1,20 @@
 package com.swyp.voiceshield.casecatalog;
 
 import jakarta.validation.constraints.NotBlank;
+import java.util.List;
 
 public record CaseChoiceEvaluationRequest(
-        @NotBlank String choiceOptionId
+        String choiceOptionId,
+        List<@NotBlank String> choiceOptionIds
 ) {
+
+    List<String> selectedChoiceOptionIds() {
+        if (choiceOptionIds != null && !choiceOptionIds.isEmpty()) {
+            return choiceOptionIds;
+        }
+        if (choiceOptionId != null && !choiceOptionId.isBlank()) {
+            return List.of(choiceOptionId);
+        }
+        return List.of();
+    }
 }
