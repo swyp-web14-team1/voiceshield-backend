@@ -22,19 +22,17 @@ public class KakaoRestOAuthClient implements KakaoOAuthClient {
     private static final Logger log = LoggerFactory.getLogger(KakaoRestOAuthClient.class);
 
     private final RestClient restClient;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final String clientId;
     private final String redirectUri;
     private final String clientSecret;
 
     public KakaoRestOAuthClient(
-            ObjectMapper objectMapper,
             @Value("${kakao.oauth.client-id:}") String clientId,
             @Value("${kakao.oauth.redirect-uri:}") String redirectUri,
             @Value("${kakao.oauth.client-secret:}") String clientSecret
     ) {
         this.restClient = RestClient.create();
-        this.objectMapper = objectMapper;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.clientSecret = clientSecret;
