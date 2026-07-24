@@ -32,7 +32,7 @@ class AuthServiceUnitTest {
         user.markWithdrawn(LocalDateTime.now());
 
         when(kakaoOAuthClient.retrieveUserProfile("withdrawn-user-code"))
-                .thenReturn(new KakaoUserProfile("kakao-withdrawn-user"));
+                .thenReturn(new KakaoUserProfile("kakao-withdrawn-user", "복구이름", "복구닉네임"));
         when(appUserRepository.findByProviderAndProviderUserId("KAKAO", "kakao-withdrawn-user"))
                 .thenReturn(Optional.of(user));
 
@@ -41,5 +41,7 @@ class AuthServiceUnitTest {
         assertThat(result.created()).isFalse();
         assertThat(result.response().userId()).isEqualTo(user.getUserId());
         assertThat(user.isDeleted()).isFalse();
+        assertThat(user.getName()).isEqualTo("복구이름");
+        assertThat(user.getNickname()).isEqualTo("복구닉네임");
     }
 }

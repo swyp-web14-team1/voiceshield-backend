@@ -29,7 +29,7 @@ public class AuthService {
     public KakaoLoginResult loginWithKakao(String kakaoAuthCode) {
         KakaoUserProfile kakaoProfile = retrieveKakaoProfile(kakaoAuthCode);
         return appUserRepository.findByProviderAndProviderUserId(KAKAO_PROVIDER, kakaoProfile.providerUserId())
-                .map(user -> toResult(loginExistingUser(user), false))
+                .map(user -> toResult(loginExistingUser(user, kakaoProfile), false))
                 .orElseGet(() -> toResult(createKakaoUser(kakaoProfile), true));
     }
 
@@ -44,8 +44,9 @@ public class AuthService {
         }
     }
 
-    private AppUser loginExistingUser(AppUser user) {
+    private AppUser loginExistingUser(AppUser user, KakaoUserProfile kakaoProfile) {
         LocalDateTime now = LocalDateTime.now();
+        user.updateProfile(kakaoProfile.name(), kakaoProfile.nickname());
         if (user.isDeleted()) {
             user.restore(now);
         } else {
@@ -55,7 +56,14 @@ public class AuthService {
     }
 
     private AppUser createKakaoUser(KakaoUserProfile kakaoProfile) {
-        return appUserRepository.save(AppUser.createKakao(kakaoProfile.providerUserId(), LocalDateTime.now()));
+        return appUserRepository.save(
+                AppUser.createKakao(
+                        kakaoProfile.providerUserId(),
+                        kakaoProfile.name(),
+                        kakaoProfile.nickname(),
+                        LocalDateTime.now()
+                )
+        );
     }
 
     private KakaoLoginResult toResult(AppUser user, boolean created) {

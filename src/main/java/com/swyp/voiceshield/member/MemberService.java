@@ -26,12 +26,14 @@ public class MemberService {
         AppUser user = appUserRepository.findByUserIdAndDeletedAtIsNull(request.userId())
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         user.completeSignup();
+        String resolvedName = hasText(request.name()) ? request.name() : user.getName();
+        String resolvedNickname = hasText(request.nickname()) ? request.nickname() : user.getNickname();
         MemberProfile memberProfile = memberProfileRepository.save(
                 MemberProfile.create(
                         user,
                         SIGNUP_COMPLETE,
-                        request.name(),
-                        request.nickname(),
+                        resolvedName,
+                        resolvedNickname,
                         LocalDateTime.now()
                 )
         );
@@ -46,8 +48,8 @@ public class MemberService {
                 memberProfile.getMemberId(),
                 memberProfile.getUser().getUserId(),
                 memberProfile.getSignupStatus(),
-                memberProfile.getName(),
-                memberProfile.getNickname()
+                hasText(memberProfile.getName()) ? memberProfile.getName() : memberProfile.getUser().getName(),
+                hasText(memberProfile.getNickname()) ? memberProfile.getNickname() : memberProfile.getUser().getNickname()
         );
     }
 
@@ -56,5 +58,9 @@ public class MemberService {
         AppUser user = appUserRepository.findByUserIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         user.markWithdrawn(LocalDateTime.now());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }
