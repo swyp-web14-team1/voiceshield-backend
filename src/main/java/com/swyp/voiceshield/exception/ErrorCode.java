@@ -9,6 +9,8 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON-003", "서버 내부 오류가 발생했습니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON-004", "지원하지 않는 HTTP 메서드입니다."),
 
+    AUTH_REQUIRED(HttpStatus.UNAUTHORIZED, "AUTH-001", "로그인이 필요한 기능입니다."),
+
     CASE_SCENARIO_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-001", "해당 사례 시나리오를 찾을 수 없습니다."),
     CASE_VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-002", "해당 사례 버전을 찾을 수 없습니다."),
     CASE_CHOICE_OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-003", "해당 선택지를 찾을 수 없습니다."),
