@@ -1,0 +1,3 @@
+ALTER TABLE app_users
+    ADD COLUMN name VARCHAR(100),
+    ADD COLUMN nickname VARCHAR(100);

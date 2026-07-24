@@ -21,6 +21,12 @@ public class AppUser {
     @Column(name = "provider_user_id", nullable = false)
     private String providerUserId;
 
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "nickname")
+    private String nickname;
+
     @Column(name = "signup_status", nullable = false)
     private String signupStatus;
 
@@ -40,6 +46,8 @@ public class AppUser {
             String userId,
             String provider,
             String providerUserId,
+            String name,
+            String nickname,
             String signupStatus,
             LocalDateTime createdAt,
             LocalDateTime lastLoginAt,
@@ -48,6 +56,8 @@ public class AppUser {
         this.userId = userId;
         this.provider = provider;
         this.providerUserId = providerUserId;
+        this.name = name;
+        this.nickname = nickname;
         this.signupStatus = signupStatus;
         this.createdAt = createdAt;
         this.lastLoginAt = lastLoginAt;
@@ -55,10 +65,16 @@ public class AppUser {
     }
 
     public static AppUser createKakao(String providerUserId, LocalDateTime now) {
+        return createKakao(providerUserId, null, null, now);
+    }
+
+    public static AppUser createKakao(String providerUserId, String name, String nickname, LocalDateTime now) {
         return new AppUser(
                 "user-" + UUID.randomUUID(),
                 "KAKAO",
                 providerUserId,
+                name,
+                nickname,
                 "SIGNUP_REQUIRED",
                 now,
                 now,
@@ -83,8 +99,25 @@ public class AppUser {
         this.signupStatus = "SIGNUP_COMPLETE";
     }
 
+    public void updateProfile(String name, String nickname) {
+        if (hasText(name)) {
+            this.name = name;
+        }
+        if (hasText(nickname)) {
+            this.nickname = nickname;
+        }
+    }
+
     public String getUserId() {
         return userId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 
     public String getSignupStatus() {
@@ -97,5 +130,9 @@ public class AppUser {
 
     public boolean isDeleted() {
         return deletedAt != null;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

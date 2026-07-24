@@ -45,6 +45,10 @@ class AuthApiTest {
 
         assertThat(appUserRepository.findByProviderAndProviderUserId("KAKAO", "kakao-" + kakaoAuthCode))
                 .isPresent();
+        assertThat(appUserRepository.findByProviderAndProviderUserId("KAKAO", "kakao-" + kakaoAuthCode))
+                .get()
+                .extracting(appUser -> appUser.getName(), appUser -> appUser.getNickname())
+                .containsExactly("카카오이름", "카카오닉네임");
     }
 
     @Test
@@ -102,7 +106,7 @@ class AuthApiTest {
                 if ("invalid-kakao-code".equals(authorizationCode)) {
                     throw new IllegalArgumentException("Invalid Kakao authorization code");
                 }
-                return new KakaoUserProfile("kakao-" + authorizationCode);
+                return new KakaoUserProfile("kakao-" + authorizationCode, "카카오이름", "카카오닉네임");
             };
         }
     }

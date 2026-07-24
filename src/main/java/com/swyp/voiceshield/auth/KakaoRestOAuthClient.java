@@ -43,7 +43,13 @@ public class KakaoRestOAuthClient implements KakaoOAuthClient {
         JsonNode tokenResponse = requestToken(authorizationCode);
         String accessToken = requireText(tokenResponse, "access_token");
         JsonNode userResponse = requestUser(accessToken);
-        return new KakaoUserProfile(requireText(userResponse, "id"));
+        JsonNode kakaoAccount = userResponse.path("kakao_account");
+        JsonNode properties = userResponse.path("properties");
+        return new KakaoUserProfile(
+                requireText(userResponse, "id"),
+                optionalText(kakaoAccount, "name"),
+                optionalText(properties, "nickname")
+        );
     }
 
     private JsonNode requestToken(String authorizationCode) {
@@ -113,6 +119,18 @@ public class KakaoRestOAuthClient implements KakaoOAuthClient {
             throw new IllegalStateException("Missing Kakao field: " + fieldName);
         }
         return field.asText();
+    }
+
+    private String optionalText(JsonNode node, String fieldName) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            return null;
+        }
+        String value = field.asText();
+        return value.isBlank() ? null : value;
     }
 
     private boolean isPresent(String value) {
