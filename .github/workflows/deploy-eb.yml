@@ -1,0 +1,124 @@
+name: Deploy to Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  EB_APPLICATION_NAME: ${{ secrets.EB_APPLICATION_NAME }}
+  EB_ENVIRONMENT_NAME: ${{ secrets.EB_ENVIRONMENT_NAME }}
+  S3_BUCKET: ${{ secrets.S3_BUCKET }}
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Validate deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_values=(
+            "AWS_REGION=${AWS_REGION:-}"
+            "EB_APPLICATION_NAME=${EB_APPLICATION_NAME:-}"
+            "EB_ENVIRONMENT_NAME=${EB_ENVIRONMENT_NAME:-}"
+            "S3_BUCKET=${S3_BUCKET:-}"
+            "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
+            "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          )
+
+          for entry in "${required_values[@]}"; do
+            key="${entry%%=*}"
+            value="${entry#*=}"
+            if [ -z "$value" ]; then
+              echo "::error::$key is missing. Configure the required GitHub secret before running this workflow."
+              exit 1
+            fi
+          done
+
+      - name: Grant execute permission for Gradle wrapper
+        run: chmod +x ./gradlew
+
+      - name: Build bootJar
+        run: ./gradlew clean bootJar
+
+      - name: Resolve deployment artifact metadata
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          jar_path="$(find build/libs -maxdepth 1 -type f -name '*.jar' | head -n 1)"
+          if [ -z "$jar_path" ]; then
+            echo "::error::No jar artifact was produced in build/libs."
+            exit 1
+          fi
+
+          short_sha="${GITHUB_SHA::7}"
+          timestamp="$(date -u +'%Y%m%d-%H%M%S')"
+          version_label="main-${timestamp}-${short_sha}"
+          s3_key="elasticbeanstalk/${GITHUB_REPOSITORY}/${version_label}.jar"
+
+          echo "jar_path=$jar_path" >> "$GITHUB_OUTPUT"
+          echo "version_label=$version_label" >> "$GITHUB_OUTPUT"
+          echo "s3_key=$s3_key" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload artifact to S3
+        run: |
+          aws s3 cp \
+            "${{ steps.artifact.outputs.jar_path }}" \
+            "s3://${S3_BUCKET}/${{ steps.artifact.outputs.s3_key }}"
+
+      - name: Create Elastic Beanstalk application version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name "${EB_APPLICATION_NAME}" \
+            --version-label "${{ steps.artifact.outputs.version_label }}" \
+            --source-bundle S3Bucket="${S3_BUCKET}",S3Key="${{ steps.artifact.outputs.s3_key }}"
+
+      - name: Deploy application version
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name "${EB_ENVIRONMENT_NAME}" \
+            --version-label "${{ steps.artifact.outputs.version_label }}"
+
+      - name: Wait for deployment to finish
+        run: |
+          aws elasticbeanstalk wait environment-updated \
+            --environment-names "${EB_ENVIRONMENT_NAME}"
+
+      - name: Print deployed environment details
+        run: |
+          aws elasticbeanstalk describe-environments \
+            --environment-names "${EB_ENVIRONMENT_NAME}" \
+            --query 'Environments[0].{Status:Status,Health:Health,VersionLabel:VersionLabel,CNAME:CNAME}' \
+            --output table

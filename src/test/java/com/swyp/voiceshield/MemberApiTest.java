@@ -96,6 +96,30 @@ class MemberApiTest {
     }
 
     @Test
+    void getMyMemberProfileFallsBackToKakaoProfileWhenStoredFieldsAreNull() throws Exception {
+        AppUser user = appUserRepository.save(
+                AppUser.createKakao(
+                        uniqueProviderUserId("kakao-member-fallback"),
+                        "카카오이름",
+                        "카카오닉네임",
+                        LocalDateTime.now()
+                )
+        );
+        user.completeSignup();
+        MemberProfile memberProfile = memberProfileRepository.save(
+                MemberProfile.create(user, "SIGNUP_COMPLETE", null, null, LocalDateTime.now())
+        );
+
+        mockMvc.perform(get("/api/v1/members/me")
+                        .header("X-User-Id", user.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.memberId").value(memberProfile.getMemberId()))
+                .andExpect(jsonPath("$.data.name").value("카카오이름"))
+                .andExpect(jsonPath("$.data.nickname").value("카카오닉네임"));
+    }
+
+    @Test
     void getMyMemberProfileRequiresUserIdHeader() throws Exception {
         mockMvc.perform(get("/api/v1/members/me"))
                 .andExpect(status().isUnauthorized())

@@ -5,12 +5,15 @@ import com.swyp.voiceshield.exception.ErrorCode;
 import com.swyp.voiceshield.user.AppUser;
 import com.swyp.voiceshield.user.AppUserRepository;
 import java.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private static final String KAKAO_PROVIDER = "KAKAO";
     private static final String LOGIN_COMPLETE = "LOGIN_COMPLETE";
 
@@ -26,7 +29,7 @@ public class AuthService {
     public KakaoLoginResult loginWithKakao(String kakaoAuthCode) {
         KakaoUserProfile kakaoProfile = retrieveKakaoProfile(kakaoAuthCode);
         return appUserRepository.findByProviderAndProviderUserId(KAKAO_PROVIDER, kakaoProfile.providerUserId())
-                .map(user -> toResult(loginExistingUser(user), false))
+                .map(user -> toResult(loginExistingUser(user, kakaoProfile), false))
                 .orElseGet(() -> toResult(createKakaoUser(kakaoProfile), true));
     }
 
@@ -34,12 +37,16 @@ public class AuthService {
         try {
             return kakaoOAuthClient.retrieveUserProfile(kakaoAuthCode);
         } catch (RuntimeException exception) {
+            log.warn("Kakao login failed during profile retrieval. codePresent={}, cause={}",
+                    kakaoAuthCode != null && !kakaoAuthCode.isBlank(),
+                    exception.getClass().getSimpleName());
             throw new ApiException(ErrorCode.KAKAO_AUTH_FAILED);
         }
     }
 
-    private AppUser loginExistingUser(AppUser user) {
+    private AppUser loginExistingUser(AppUser user, KakaoUserProfile kakaoProfile) {
         LocalDateTime now = LocalDateTime.now();
+        user.updateProfile(kakaoProfile.name(), kakaoProfile.nickname());
         if (user.isDeleted()) {
             user.restore(now);
         } else {
@@ -49,7 +56,14 @@ public class AuthService {
     }
 
     private AppUser createKakaoUser(KakaoUserProfile kakaoProfile) {
-        return appUserRepository.save(AppUser.createKakao(kakaoProfile.providerUserId(), LocalDateTime.now()));
+        return appUserRepository.save(
+                AppUser.createKakao(
+                        kakaoProfile.providerUserId(),
+                        kakaoProfile.name(),
+                        kakaoProfile.nickname(),
+                        LocalDateTime.now()
+                )
+        );
     }
 
     private KakaoLoginResult toResult(AppUser user, boolean created) {

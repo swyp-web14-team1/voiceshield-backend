@@ -1,19 +1,28 @@
 package com.swyp.voiceshield.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 @Component
 public class KakaoRestOAuthClient implements KakaoOAuthClient {
 
+    private static final Logger log = LoggerFactory.getLogger(KakaoRestOAuthClient.class);
+
     private final RestClient restClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final String clientId;
     private final String redirectUri;
     private final String clientSecret;
@@ -34,7 +43,13 @@ public class KakaoRestOAuthClient implements KakaoOAuthClient {
         JsonNode tokenResponse = requestToken(authorizationCode);
         String accessToken = requireText(tokenResponse, "access_token");
         JsonNode userResponse = requestUser(accessToken);
-        return new KakaoUserProfile(requireText(userResponse, "id"));
+        JsonNode kakaoAccount = userResponse.path("kakao_account");
+        JsonNode properties = userResponse.path("properties");
+        return new KakaoUserProfile(
+                requireText(userResponse, "id"),
+                optionalText(kakaoAccount, "name"),
+                optionalText(properties, "nickname")
+        );
     }
 
     private JsonNode requestToken(String authorizationCode) {
@@ -47,20 +62,55 @@ public class KakaoRestOAuthClient implements KakaoOAuthClient {
             form.add("client_secret", clientSecret);
         }
 
-        return restClient.post()
-                .uri("https://kauth.kakao.com/oauth/token")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(form)
-                .retrieve()
-                .body(JsonNode.class);
+        try {
+            ResponseEntity<String> response = restClient.post()
+                    .uri("https://kauth.kakao.com/oauth/token")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
+                    .retrieve()
+                    .toEntity(String.class);
+            return readJson(
+                    response.getBody(),
+                    "token",
+                    response.getHeaders().getContentType() != null
+                            ? response.getHeaders().getContentType().toString()
+                            : "unknown"
+            );
+        } catch (RestClientResponseException exception) {
+            log.warn(
+                    "Kakao token exchange failed. status={}, responseBody={}, redirectUri={}, clientIdSet={}, clientSecretSet={}",
+                    exception.getStatusCode(),
+                    exception.getResponseBodyAsString(),
+                    redirectUri,
+                    isPresent(clientId),
+                    isPresent(clientSecret)
+            );
+            throw exception;
+        }
     }
 
     private JsonNode requestUser(String accessToken) {
-        return restClient.get()
-                .uri("https://kapi.kakao.com/v2/user/me")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .retrieve()
-                .body(JsonNode.class);
+        try {
+            ResponseEntity<String> response = restClient.get()
+                    .uri("https://kapi.kakao.com/v2/user/me")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .retrieve()
+                    .toEntity(String.class);
+            return readJson(
+                    response.getBody(),
+                    "user",
+                    response.getHeaders().getContentType() != null
+                            ? response.getHeaders().getContentType().toString()
+                            : "unknown"
+            );
+        } catch (RestClientResponseException exception) {
+            log.warn(
+                    "Kakao user profile request failed. status={}, responseBody={}",
+                    exception.getStatusCode(),
+                    exception.getResponseBodyAsString()
+            );
+            throw exception;
+        }
     }
 
     private String requireText(JsonNode node, String fieldName) {
@@ -69,5 +119,35 @@ public class KakaoRestOAuthClient implements KakaoOAuthClient {
             throw new IllegalStateException("Missing Kakao field: " + fieldName);
         }
         return field.asText();
+    }
+
+    private String optionalText(JsonNode node, String fieldName) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            return null;
+        }
+        String value = field.asText();
+        return value.isBlank() ? null : value;
+    }
+
+    private boolean isPresent(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private JsonNode readJson(String rawBody, String phase, String contentType) {
+        try {
+            return objectMapper.readTree(rawBody);
+        } catch (JsonProcessingException exception) {
+            log.warn(
+                    "Kakao {} response parsing failed. contentType={}, rawBody={}",
+                    phase,
+                    contentType,
+                    rawBody
+            );
+            throw new IllegalStateException("Failed to parse Kakao " + phase + " response", exception);
+        }
     }
 }
