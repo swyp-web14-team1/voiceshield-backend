@@ -7,6 +7,7 @@ public record CaseScenarioStepResponse(
         String scenarioId,
         String variantId,
         CaseChannel channel,
+        CaseQuizResponse quiz,
         List<String> scriptLines,
         List<CaseVariantOptionResponse> choices
 ) {
@@ -21,6 +22,7 @@ public record CaseScenarioStepResponse(
                 scenario.getId(),
                 variant.getId(),
                 variant.getChannel(),
+                CaseQuizResponse.from(variant.getQuiz()),
                 scriptLines,
                 choices
         );
