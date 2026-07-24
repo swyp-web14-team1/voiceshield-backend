@@ -80,4 +80,8 @@ public class LearningHistory {
     public LearningStatus getStatus() {
         return status;
     }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 }
