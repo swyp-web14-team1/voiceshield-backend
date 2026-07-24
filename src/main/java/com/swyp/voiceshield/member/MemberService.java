@@ -23,7 +23,7 @@ public class MemberService {
 
     @Transactional
     public MemberResponse createMember(MemberCreateRequest request) {
-        AppUser user = appUserRepository.findById(request.userId())
+        AppUser user = appUserRepository.findByIdAndDeletedAtIsNull(request.userId())
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         user.completeSignup();
         MemberProfile memberProfile = memberProfileRepository.save(
@@ -34,7 +34,7 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public MemberMeResponse getMyMemberProfile(String userId) {
-        MemberProfile memberProfile = memberProfileRepository.findByUser_UserId(userId)
+        MemberProfile memberProfile = memberProfileRepository.findByUser_UserIdAndUser_DeletedAtIsNull(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.MEMBER_PROFILE_NOT_FOUND));
         return new MemberMeResponse(
                 memberProfile.getMemberId(),
@@ -45,9 +45,8 @@ public class MemberService {
 
     @Transactional
     public void withdrawMember(String userId) {
-        AppUser user = appUserRepository.findById(userId)
+        AppUser user = appUserRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-        memberProfileRepository.deleteByUser_UserId(userId);
-        appUserRepository.delete(user);
+        user.markWithdrawn(LocalDateTime.now());
     }
 }

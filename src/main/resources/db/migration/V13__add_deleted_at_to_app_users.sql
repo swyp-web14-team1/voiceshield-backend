@@ -1,0 +1,2 @@
+ALTER TABLE app_users
+    ADD COLUMN deleted_at TIMESTAMP NULL;

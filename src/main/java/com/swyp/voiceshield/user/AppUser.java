@@ -30,6 +30,9 @@ public class AppUser {
     @Column(name = "last_login_at", nullable = false)
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     protected AppUser() {
     }
 
@@ -39,7 +42,8 @@ public class AppUser {
             String providerUserId,
             String signupStatus,
             LocalDateTime createdAt,
-            LocalDateTime lastLoginAt
+            LocalDateTime lastLoginAt,
+            LocalDateTime deletedAt
     ) {
         this.userId = userId;
         this.provider = provider;
@@ -47,6 +51,7 @@ public class AppUser {
         this.signupStatus = signupStatus;
         this.createdAt = createdAt;
         this.lastLoginAt = lastLoginAt;
+        this.deletedAt = deletedAt;
     }
 
     public static AppUser createKakao(String providerUserId, LocalDateTime now) {
@@ -56,12 +61,22 @@ public class AppUser {
                 providerUserId,
                 "SIGNUP_REQUIRED",
                 now,
-                now
+                now,
+                null
         );
     }
 
     public void markLoggedIn(LocalDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
+    }
+
+    public void markWithdrawn(LocalDateTime now) {
+        this.deletedAt = now;
+    }
+
+    public void restore(LocalDateTime now) {
+        this.deletedAt = null;
+        this.lastLoginAt = now;
     }
 
     public void completeSignup() {
@@ -74,5 +89,13 @@ public class AppUser {
 
     public String getSignupStatus() {
         return signupStatus;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 }
