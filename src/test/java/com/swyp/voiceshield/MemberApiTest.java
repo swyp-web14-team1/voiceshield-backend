@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -91,5 +92,44 @@ class MemberApiTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("AUTH-001"));
+    }
+
+    @Test
+    void withdrawCurrentMemberSoftDeletesUser() throws Exception {
+        AppUser user = appUserRepository.save(AppUser.createKakao("kakao-member-withdraw", LocalDateTime.now()));
+        user.completeSignup();
+        MemberProfile memberProfile = memberProfileRepository.save(
+                MemberProfile.create(user, "SIGNUP_COMPLETE", LocalDateTime.now())
+        );
+
+        mockMvc.perform(delete("/api/v1/members/me")
+                        .header("X-User-Id", user.getUserId()))
+                .andExpect(status().isNoContent());
+
+        assertThat(memberProfileRepository.findById(memberProfile.getMemberId())).isPresent();
+        assertThat(appUserRepository.findById(user.getUserId()))
+                .isPresent()
+                .get()
+                .extracting(AppUser::getDeletedAt)
+                .isNotNull();
+    }
+
+    @Test
+    void getMyMemberProfileReturnsNotFoundAfterWithdrawal() throws Exception {
+        AppUser user = appUserRepository.save(AppUser.createKakao("kakao-member-withdraw-me", LocalDateTime.now()));
+        user.completeSignup();
+        memberProfileRepository.save(
+                MemberProfile.create(user, "SIGNUP_COMPLETE", LocalDateTime.now())
+        );
+
+        mockMvc.perform(delete("/api/v1/members/me")
+                        .header("X-User-Id", user.getUserId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/v1/members/me")
+                        .header("X-User-Id", user.getUserId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("MEMBER-001"));
     }
 }

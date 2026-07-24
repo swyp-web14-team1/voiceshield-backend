@@ -39,7 +39,12 @@ public class AuthService {
     }
 
     private AppUser loginExistingUser(AppUser user) {
-        user.markLoggedIn(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        if (user.isDeleted()) {
+            user.restore(now);
+        } else {
+            user.markLoggedIn(now);
+        }
         return user;
     }
 

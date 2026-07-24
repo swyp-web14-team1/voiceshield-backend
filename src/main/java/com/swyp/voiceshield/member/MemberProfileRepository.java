@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MemberProfileRepository extends JpaRepository<MemberProfile, String> {
 
-    Optional<MemberProfile> findByUser_UserId(String userId);
+    Optional<MemberProfile> findByUser_UserIdAndUser_DeletedAtIsNull(String userId);
 }
