@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface LearningHistoryRepository extends JpaRepository<LearningHistory, Long> {
 
     Optional<LearningHistory> findByUserIdAndScenario_Id(String userId, String scenarioId);
+
+    long countByUserIdAndStatus(String userId, LearningStatus status);
 }
