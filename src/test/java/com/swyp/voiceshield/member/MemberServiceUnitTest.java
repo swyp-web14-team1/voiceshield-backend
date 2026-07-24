@@ -32,13 +32,13 @@ class MemberServiceUnitTest {
         AppUser user = AppUser.createKakao("kakao-member-withdraw", LocalDateTime.now());
         user.completeSignup();
 
-        when(appUserRepository.findByIdAndDeletedAtIsNull(user.getUserId()))
+        when(appUserRepository.findByUserIdAndDeletedAtIsNull(user.getUserId()))
                 .thenReturn(Optional.of(user));
 
         memberService.withdrawMember(user.getUserId());
 
         assertThat(user.isDeleted()).isTrue();
         verifyNoInteractions(memberProfileRepository);
-        verify(appUserRepository).findByIdAndDeletedAtIsNull(user.getUserId());
+        verify(appUserRepository).findByUserIdAndDeletedAtIsNull(user.getUserId());
     }
 }

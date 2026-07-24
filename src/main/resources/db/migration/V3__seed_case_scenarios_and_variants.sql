@@ -9,8 +9,7 @@ VALUES
     ('case-mobile-repair', '휴대폰 고장'),
     ('case-return-delivery', '반품 택배'),
     ('case-fire-agency', '소방기관 사칭'),
-    ('case-special-investment', '특별 투자상품 권유'),
-    ('case-new-number-family-transfer', '새 번호로 온 가족의 송금 요청');
+    ('case-special-investment', '특별 투자상품 권유');
 
 INSERT INTO case_variants (variant_id, scenario_id, channel)
 VALUES
@@ -21,6 +20,4 @@ VALUES
     ('case-fire-agency-message', 'case-fire-agency', 'MESSAGE'),
     ('case-fire-agency-voice', 'case-fire-agency', 'VOICE'),
     ('case-special-investment-message', 'case-special-investment', 'MESSAGE'),
-    ('case-special-investment-voice', 'case-special-investment', 'VOICE'),
-    ('case-new-number-family-transfer-message', 'case-new-number-family-transfer', 'MESSAGE'),
-    ('case-new-number-family-transfer-voice', 'case-new-number-family-transfer', 'VOICE');
+    ('case-special-investment-voice', 'case-special-investment', 'VOICE');
