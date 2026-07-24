@@ -22,9 +22,9 @@ class SchemaMigrationTest {
 
     private int tableCount(String tableName) {
         Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = ?",
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'public' AND TABLE_NAME = ?",
                 Integer.class,
-                tableName.toUpperCase()
+                tableName
         );
         return count == null ? 0 : count;
     }
