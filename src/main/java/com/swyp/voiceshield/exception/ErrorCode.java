@@ -18,7 +18,9 @@ public enum ErrorCode {
     CASE_SCENARIO_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-001", "해당 사례 시나리오를 찾을 수 없습니다."),
     CASE_VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-002", "해당 사례 버전을 찾을 수 없습니다."),
     CASE_CHOICE_OPTION_NOT_FOUND(HttpStatus.NOT_FOUND, "CASE-003", "해당 선택지를 찾을 수 없습니다."),
-    CASE_CHANNEL_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "CASE-004", "지원하지 않는 사례 채널입니다.");
+    CASE_CHANNEL_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "CASE-004", "지원하지 않는 사례 채널입니다."),
+
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY-001", "해당 카테고리를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
