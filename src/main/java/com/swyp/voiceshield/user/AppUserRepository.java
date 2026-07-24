@@ -7,5 +7,5 @@ public interface AppUserRepository extends JpaRepository<AppUser, String> {
 
     Optional<AppUser> findByProviderAndProviderUserId(String provider, String providerUserId);
 
-    Optional<AppUser> findByIdAndDeletedAtIsNull(String userId);
+    Optional<AppUser> findByUserIdAndDeletedAtIsNull(String userId);
 }

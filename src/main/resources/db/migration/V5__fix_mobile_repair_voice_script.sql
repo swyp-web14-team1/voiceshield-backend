@@ -33,21 +33,17 @@ SET content = '[전화벨]' || CHR(10) ||
 WHERE variant_id = 'case-mobile-repair-voice';
 
 UPDATE case_variant_options
-SET option_text = '휴대폰이 고장 나서 다른 번호로 연락했다고 말했다.',
-    is_correct = FALSE
+SET option_text = '계좌번호를 받아 바로 송금한다.'
 WHERE option_id = 'case-mobile-repair-voice-option-1';
 
 UPDATE case_variant_options
-SET option_text = '병원에서 치료를 받고 있다고 말했다.',
-    is_correct = FALSE
+SET option_text = '기존에 저장된 아들 번호로 직접 전화한다.'
 WHERE option_id = 'case-mobile-repair-voice-option-2';
 
 UPDATE case_variant_options
-SET option_text = '병원비를 개인 계좌로 바로 송금해 달라고 했다.',
-    is_correct = TRUE
+SET option_text = '상대방이 알려준 계좌로 송금한다.'
 WHERE option_id = 'case-mobile-repair-voice-option-3';
 
 UPDATE case_variant_options
-SET option_text = '간호사가 기다리고 있다고 말했다.',
-    is_correct = FALSE
+SET option_text = '전화를 끊고 다른 가족에게 먼저 확인한다.'
 WHERE option_id = 'case-mobile-repair-voice-option-4';
