@@ -26,21 +26,42 @@ public class MemberProfile {
     @Column(name = "signup_status", nullable = false)
     private String signupStatus;
 
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "nickname")
+    private String nickname;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     protected MemberProfile() {
     }
 
-    private MemberProfile(String memberId, AppUser user, String signupStatus, LocalDateTime createdAt) {
+    private MemberProfile(
+            String memberId,
+            AppUser user,
+            String signupStatus,
+            String name,
+            String nickname,
+            LocalDateTime createdAt
+    ) {
         this.memberId = memberId;
         this.user = user;
         this.signupStatus = signupStatus;
+        this.name = name;
+        this.nickname = nickname;
         this.createdAt = createdAt;
     }
 
-    public static MemberProfile create(AppUser user, String signupStatus, LocalDateTime now) {
-        return new MemberProfile("member-" + UUID.randomUUID(), user, signupStatus, now);
+    public static MemberProfile create(
+            AppUser user,
+            String signupStatus,
+            String name,
+            String nickname,
+            LocalDateTime now
+    ) {
+        return new MemberProfile("member-" + UUID.randomUUID(), user, signupStatus, name, nickname, now);
     }
 
     public String getMemberId() {
@@ -53,5 +74,13 @@ public class MemberProfile {
 
     public String getSignupStatus() {
         return signupStatus;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 }

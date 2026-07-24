@@ -23,13 +23,13 @@ class CaseVariantMigrationTest {
 
     private int tableCount(String tableName) {
         return count("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
-                + "WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = ?", tableName.toUpperCase());
+                + "WHERE TABLE_SCHEMA = 'public' AND TABLE_NAME = ?", tableName);
     }
 
     private int columnCount(String tableName, String columnName) {
         return count("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS "
-                + "WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = ? AND COLUMN_NAME = ?",
-                tableName.toUpperCase(), columnName.toUpperCase());
+                + "WHERE TABLE_SCHEMA = 'public' AND TABLE_NAME = ? AND COLUMN_NAME = ?",
+                tableName, columnName);
     }
 
     private int count(String sql, String... parameters) {

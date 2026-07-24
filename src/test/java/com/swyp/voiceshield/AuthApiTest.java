@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,22 +32,25 @@ class AuthApiTest {
 
     @Test
     void kakaoLoginCreatesUserOnFirstEntry() throws Exception {
+        String kakaoAuthCode = uniqueAuthCode("first-entry-code");
+
         mockMvc.perform(post("/api/v1/auth/kakao")
                         .contentType("application/json")
-                        .content("{\"kakaoAuthCode\":\"first-entry-code\"}"))
+                        .content("{\"kakaoAuthCode\":\"%s\"}".formatted(kakaoAuthCode)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.userId", notNullValue()))
                 .andExpect(jsonPath("$.data.loginResult").value("LOGIN_COMPLETE"))
                 .andExpect(jsonPath("$.data.signupStatus").value("SIGNUP_REQUIRED"));
 
-        assertThat(appUserRepository.findByProviderAndProviderUserId("KAKAO", "kakao-first-entry-code"))
+        assertThat(appUserRepository.findByProviderAndProviderUserId("KAKAO", "kakao-" + kakaoAuthCode))
                 .isPresent();
     }
 
     @Test
     void kakaoLoginReturnsExistingUserOnRepeatedEntry() throws Exception {
-        String requestBody = "{\"kakaoAuthCode\":\"repeat-entry-code\"}";
+        String kakaoAuthCode = uniqueAuthCode("repeat-entry-code");
+        String requestBody = "{\"kakaoAuthCode\":\"%s\"}".formatted(kakaoAuthCode);
 
         String firstResponse = mockMvc.perform(post("/api/v1/auth/kakao")
                         .contentType("application/json")
@@ -100,5 +105,9 @@ class AuthApiTest {
                 return new KakaoUserProfile("kakao-" + authorizationCode);
             };
         }
+    }
+
+    private String uniqueAuthCode(String prefix) {
+        return prefix + "-" + UUID.randomUUID();
     }
 }

@@ -24,8 +24,7 @@ class GuestSessionApiTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private GuestSessionRepository guestSessionRepository;
