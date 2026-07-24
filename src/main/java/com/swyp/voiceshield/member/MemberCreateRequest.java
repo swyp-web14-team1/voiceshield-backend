@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Pattern;
 public record MemberCreateRequest(
         @NotBlank String userId,
         @Pattern(regexp = "SIGNUP_COMPLETE")
-        @NotBlank String signupStatus
+        @NotBlank String signupStatus,
+        String name,
+        String nickname
 ) {
 }

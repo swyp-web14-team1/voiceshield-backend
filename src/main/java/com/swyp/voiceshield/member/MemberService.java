@@ -27,7 +27,13 @@ public class MemberService {
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         user.completeSignup();
         MemberProfile memberProfile = memberProfileRepository.save(
-                MemberProfile.create(user, SIGNUP_COMPLETE, LocalDateTime.now())
+                MemberProfile.create(
+                        user,
+                        SIGNUP_COMPLETE,
+                        request.name(),
+                        request.nickname(),
+                        LocalDateTime.now()
+                )
         );
         return new MemberResponse(memberProfile.getMemberId(), memberProfile.getSignupStatus());
     }
@@ -39,7 +45,9 @@ public class MemberService {
         return new MemberMeResponse(
                 memberProfile.getMemberId(),
                 memberProfile.getUser().getUserId(),
-                memberProfile.getSignupStatus()
+                memberProfile.getSignupStatus(),
+                memberProfile.getName(),
+                memberProfile.getNickname()
         );
     }
 

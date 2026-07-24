@@ -13,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
@@ -29,8 +30,7 @@ class MemberApiTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private AppUserRepository appUserRepository;
@@ -40,14 +40,16 @@ class MemberApiTest {
 
     @Test
     void createMemberStoresBasicUserInformationAndCompletesSignup() throws Exception {
-        AppUser user = appUserRepository.save(AppUser.createKakao("kakao-member-create", LocalDateTime.now()));
+        AppUser user = appUserRepository.save(AppUser.createKakao(uniqueProviderUserId("kakao-member-create"), LocalDateTime.now()));
 
         String responseBody = mockMvc.perform(post("/api/v1/members")
                         .contentType("application/json")
                         .content("""
                                 {
                                   "userId": "%s",
-                                  "signupStatus": "SIGNUP_COMPLETE"
+                                  "signupStatus": "SIGNUP_COMPLETE",
+                                  "name": "홍길동",
+                                  "nickname": "길동이"
                                 }
                                 """.formatted(user.getUserId())))
                 .andExpect(status().isCreated())
@@ -62,6 +64,11 @@ class MemberApiTest {
         String memberId = responseJson.path("data").path("memberId").asText();
 
         assertThat(memberId).startsWith("member-");
+        assertThat(memberProfileRepository.findById(memberId))
+                .isPresent()
+                .get()
+                .extracting(MemberProfile::getName, MemberProfile::getNickname)
+                .containsExactly("홍길동", "길동이");
         assertThat(appUserRepository.findById(user.getUserId()))
                 .isPresent()
                 .get()
@@ -71,10 +78,10 @@ class MemberApiTest {
 
     @Test
     void getMyMemberProfileIdentifiesCurrentUserByUserIdHeader() throws Exception {
-        AppUser user = appUserRepository.save(AppUser.createKakao("kakao-member-me", LocalDateTime.now()));
+        AppUser user = appUserRepository.save(AppUser.createKakao(uniqueProviderUserId("kakao-member-me"), LocalDateTime.now()));
         user.completeSignup();
         MemberProfile memberProfile = memberProfileRepository.save(
-                MemberProfile.create(user, "SIGNUP_COMPLETE", LocalDateTime.now())
+                MemberProfile.create(user, "SIGNUP_COMPLETE", "홍길동", "길동이", LocalDateTime.now())
         );
 
         mockMvc.perform(get("/api/v1/members/me")
@@ -83,7 +90,9 @@ class MemberApiTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.memberId").value(memberProfile.getMemberId()))
                 .andExpect(jsonPath("$.data.userId").value(user.getUserId()))
-                .andExpect(jsonPath("$.data.signupStatus").value("SIGNUP_COMPLETE"));
+                .andExpect(jsonPath("$.data.signupStatus").value("SIGNUP_COMPLETE"))
+                .andExpect(jsonPath("$.data.name").value("홍길동"))
+                .andExpect(jsonPath("$.data.nickname").value("길동이"));
     }
 
     @Test
@@ -96,10 +105,10 @@ class MemberApiTest {
 
     @Test
     void withdrawCurrentMemberSoftDeletesUser() throws Exception {
-        AppUser user = appUserRepository.save(AppUser.createKakao("kakao-member-withdraw", LocalDateTime.now()));
+        AppUser user = appUserRepository.save(AppUser.createKakao(uniqueProviderUserId("kakao-member-withdraw"), LocalDateTime.now()));
         user.completeSignup();
         MemberProfile memberProfile = memberProfileRepository.save(
-                MemberProfile.create(user, "SIGNUP_COMPLETE", LocalDateTime.now())
+                MemberProfile.create(user, "SIGNUP_COMPLETE", null, null, LocalDateTime.now())
         );
 
         mockMvc.perform(delete("/api/v1/members/me")
@@ -116,10 +125,10 @@ class MemberApiTest {
 
     @Test
     void getMyMemberProfileReturnsNotFoundAfterWithdrawal() throws Exception {
-        AppUser user = appUserRepository.save(AppUser.createKakao("kakao-member-withdraw-me", LocalDateTime.now()));
+        AppUser user = appUserRepository.save(AppUser.createKakao(uniqueProviderUserId("kakao-member-withdraw-me"), LocalDateTime.now()));
         user.completeSignup();
         memberProfileRepository.save(
-                MemberProfile.create(user, "SIGNUP_COMPLETE", LocalDateTime.now())
+                MemberProfile.create(user, "SIGNUP_COMPLETE", null, null, LocalDateTime.now())
         );
 
         mockMvc.perform(delete("/api/v1/members/me")
@@ -131,5 +140,9 @@ class MemberApiTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("MEMBER-001"));
+    }
+
+    private String uniqueProviderUserId(String prefix) {
+        return prefix + "-" + UUID.randomUUID();
     }
 }

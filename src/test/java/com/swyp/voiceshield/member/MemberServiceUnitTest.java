@@ -28,6 +28,27 @@ class MemberServiceUnitTest {
     private MemberService memberService;
 
     @Test
+    void getMyMemberProfileReturnsNameAndNickname() {
+        AppUser user = AppUser.createKakao("kakao-member-me", LocalDateTime.now());
+        MemberProfile memberProfile = MemberProfile.create(
+                user,
+                "SIGNUP_COMPLETE",
+                "홍길동",
+                "길동이",
+                LocalDateTime.now()
+        );
+
+        when(memberProfileRepository.findByUser_UserIdAndUser_DeletedAtIsNull(user.getUserId()))
+                .thenReturn(Optional.of(memberProfile));
+
+        MemberMeResponse response = memberService.getMyMemberProfile(user.getUserId());
+
+        assertThat(response.name()).isEqualTo("홍길동");
+        assertThat(response.nickname()).isEqualTo("길동이");
+        verify(memberProfileRepository).findByUser_UserIdAndUser_DeletedAtIsNull(user.getUserId());
+    }
+
+    @Test
     void withdrawMemberMarksUserAsDeleted() {
         AppUser user = AppUser.createKakao("kakao-member-withdraw", LocalDateTime.now());
         user.completeSignup();
