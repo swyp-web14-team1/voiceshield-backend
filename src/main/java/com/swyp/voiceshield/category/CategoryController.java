@@ -3,6 +3,7 @@ package com.swyp.voiceshield.category;
 import com.swyp.voiceshield.common.response.ApiResponse;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,17 +11,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/categories")
 public class CategoryController {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
 
-    public CategoryController(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
+    public CategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
     }
 
     @GetMapping
     public ApiResponse<List<CategoryResponse>> getCategories() {
-        List<CategoryResponse> categories = categoryRepository.findAll().stream()
-                .map(CategoryResponse::from)
-                .toList();
-        return ApiResponse.success(categories);
+        return ApiResponse.success(categoryService.getCategories());
+    }
+
+    @GetMapping("/{categoryId}/cases")
+    public ApiResponse<CategoryCaseListResponse> getCasesByCategory(@PathVariable String categoryId) {
+        return ApiResponse.success(categoryService.getCasesByCategory(categoryId));
     }
 }
