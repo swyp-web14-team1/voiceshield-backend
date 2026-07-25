@@ -6,6 +6,7 @@ import java.util.Map;
 public record CaseScenarioResponse(
         String scenarioId,
         String caseName,
+        String categoryName,
         String difficulty,
         String estimatedLearningTime,
         String completionRate,
@@ -19,6 +20,7 @@ public record CaseScenarioResponse(
         return new CaseScenarioResponse(
                 scenario.getId(),
                 scenario.getName(),
+                scenario.getCategory() == null ? null : scenario.getCategory().getName(),
                 scenario.getDifficulty(),
                 scenario.getEstimatedLearningTime(),
                 scenario.getCompletionRate(),

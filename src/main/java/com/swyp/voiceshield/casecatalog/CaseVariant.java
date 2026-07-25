@@ -12,10 +12,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "case_variants")
@@ -57,8 +59,42 @@ public class CaseVariant {
         return content;
     }
 
+    /**
+     * 퀴즈 보기만 반환한다. 퀴즈 채점·조회 경로가 쓰는 기존 계약이다.
+     *
+     * <p>V18 부터 같은 테이블에 행동 선택지({@link CaseOptionKind#ACTION})가 함께 저장되므로
+     * 여기서 걸러내지 않으면 채점 대상에 행동 선택지가 섞인다.
+     */
     public Set<CaseVariantOption> getOptions() {
-        return options;
+        return options.stream()
+                .filter(option -> option.getOptionKind() == CaseOptionKind.QUIZ)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    /**
+     * 종류를 가리지 않은 전체 선택지.
+     *
+     * <p>제출된 선택지 ID를 찾을 때 쓴다. {@link #getOptions()} 로 찾으면 행동 선택지 ID가
+     * 항상 미존재로 떨어지므로, 조회 범위와 채점 범위를 분리한다.
+     */
+    public Set<CaseVariantOption> getAllOptions() {
+        return Collections.unmodifiableSet(options);
+    }
+
+    /** 정본 '🎮 선택지' — 시뮬레이션 진행 중 사용자가 고르는 행동. 회차·번호 순. */
+    public List<CaseVariantOption> getActionChoices() {
+        return options.stream()
+                .filter(option -> option.getOptionKind() == CaseOptionKind.ACTION)
+                .sorted(Comparator.comparingInt(CaseVariantOption::getStepNumber)
+                        .thenComparingInt(CaseVariantOption::getOptionNumber))
+                .toList();
+    }
+
+    /** 특정 회차의 행동 선택지. 정답 판정 범위는 회차 단위다. */
+    public List<CaseVariantOption> getActionChoices(int stepNumber) {
+        return getActionChoices().stream()
+                .filter(option -> option.getStepNumber() == stepNumber)
+                .toList();
     }
 
     public CaseVariantQuiz getQuiz() {

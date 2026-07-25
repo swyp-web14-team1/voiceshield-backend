@@ -9,7 +9,8 @@ public record CaseScenarioStepResponse(
         CaseChannel channel,
         CaseQuizResponse quiz,
         List<String> scriptLines,
-        List<CaseVariantOptionResponse> choices
+        List<CaseVariantOptionResponse> choices,
+        List<CaseActionChoiceResponse> actionChoices
 ) {
 
     static CaseScenarioStepResponse from(CaseScenario scenario, CaseVariant variant, List<String> scriptLines) {
@@ -18,13 +19,18 @@ public record CaseScenarioStepResponse(
                 .map(CaseVariantOptionResponse::from)
                 .toList();
 
+        List<CaseActionChoiceResponse> actionChoices = variant.getActionChoices().stream()
+                .map(CaseActionChoiceResponse::from)
+                .toList();
+
         return new CaseScenarioStepResponse(
                 scenario.getId(),
                 variant.getId(),
                 variant.getChannel(),
                 CaseQuizResponse.from(variant.getQuiz()),
                 scriptLines,
-                choices
+                choices,
+                actionChoices
         );
     }
 }
