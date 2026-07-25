@@ -10,6 +10,8 @@ public record CaseScenarioResponse(
         String difficulty,
         String estimatedLearningTime,
         String completionRate,
+        String averageDamageAmount,
+        String reportCount,
         Map<String, CaseVariantResponse> variants
 ) {
 
@@ -24,6 +26,8 @@ public record CaseScenarioResponse(
                 scenario.getDifficulty(),
                 scenario.getEstimatedLearningTime(),
                 scenario.getCompletionRate(),
+                scenario.getAverageDamageAmount(),
+                scenario.getReportCount(),
                 variants
         );
     }
