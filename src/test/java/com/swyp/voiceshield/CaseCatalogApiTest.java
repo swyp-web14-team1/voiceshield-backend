@@ -346,6 +346,32 @@ class CaseCatalogApiTest {
     }
 
     @Test
+    void returnsFireAgencyScenarioWithStatistics() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-fire-agency"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-fire-agency"))
+                .andExpect(jsonPath("$.data.caseName").value("소방기관 사칭"))
+                .andExpect(jsonPath("$.data.averageDamageAmount").value("약 4,426만 원"))
+                .andExpect(jsonPath("$.data.reportCount").value("약 350,010건 (2023년 기준)"))
+                .andExpect(jsonPath("$.data.variants.message.channel").value("MESSAGE"))
+                .andExpect(jsonPath("$.data.variants.voice.channel").value("VOICE"));
+    }
+
+    @Test
+    void returnsSpecialInvestmentScenarioWithStatistics() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-special-investment"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-special-investment"))
+                .andExpect(jsonPath("$.data.caseName").value("특별 투자상품 권유"))
+                .andExpect(jsonPath("$.data.averageDamageAmount").value("수천만 원 규모"))
+                .andExpect(jsonPath("$.data.reportCount").value("약 12,851건 (2024년 기준)"))
+                .andExpect(jsonPath("$.data.variants.message.channel").value("MESSAGE"))
+                .andExpect(jsonPath("$.data.variants.voice.channel").value("VOICE"));
+    }
+
+    @Test
     void returnsNewNumberFamilyTransferVoiceScenarioStepWithQuizAndChoices() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-new-number-family-transfer/variants/voice/scenario-step"))
                 .andExpect(status().isOk())
