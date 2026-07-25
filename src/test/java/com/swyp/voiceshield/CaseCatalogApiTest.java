@@ -28,6 +28,8 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-return-delivery"))
                 .andExpect(jsonPath("$.data.caseName").value("반품 택배"))
+                .andExpect(jsonPath("$.data.averageDamageAmount").value("수백만 원 규모"))
+                .andExpect(jsonPath("$.data.reportCount").value("약 91,159건 (2023년 기준)"))
                 .andExpect(jsonPath("$.data.variants.message.channel").value("MESSAGE"))
                 .andExpect(jsonPath("$.data.variants.voice.channel").value("VOICE"));
     }
@@ -59,6 +61,8 @@ class CaseCatalogApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.caseName").value("휴대폰 고장"))
+                .andExpect(jsonPath("$.data.averageDamageAmount").value("약 1700만원"))
+                .andExpect(jsonPath("$.data.reportCount").value("약 59,565건 (2023년 기준)"))
                 .andExpect(jsonPath("$.data.categoryName").value("가족 사칭"));
     }
 
@@ -333,6 +337,8 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-new-number-family-transfer"))
                 .andExpect(jsonPath("$.data.caseName").value("새 번호로 온 가족의 송금 요청"))
+                .andExpect(jsonPath("$.data.averageDamageAmount").value("약 954만 원"))
+                .andExpect(jsonPath("$.data.reportCount").value("약 13,179건 (2023년 기준)"))
                 .andExpect(jsonPath("$.data.variants.message.channel").value("MESSAGE"))
                 .andExpect(jsonPath("$.data.variants.message.content").value(containsString("메신저로 자녀를 사칭한 사람이 급하게 연락을 보내왔습니다.")))
                 .andExpect(jsonPath("$.data.variants.voice.channel").value("VOICE"))

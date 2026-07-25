@@ -37,6 +37,12 @@ public class CaseScenario {
     @Column(name = "completion_rate")
     private String completionRate;
 
+    @Column(name = "average_damage_amount")
+    private String averageDamageAmount;
+
+    @Column(name = "report_count")
+    private String reportCount;
+
     @OneToMany(mappedBy = "scenario", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<CaseVariant> variants = new ArrayList<>();
 
@@ -65,6 +71,14 @@ public class CaseScenario {
 
     public String getCompletionRate() {
         return completionRate;
+    }
+
+    public String getAverageDamageAmount() {
+        return averageDamageAmount;
+    }
+
+    public String getReportCount() {
+        return reportCount;
     }
 
     public List<CaseVariant> getVariants() {
