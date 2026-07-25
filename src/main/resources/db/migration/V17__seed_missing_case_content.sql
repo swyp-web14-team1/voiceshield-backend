@@ -1,4 +1,4 @@
--- V13: 정본(swyp/시나리오/*.md) 기준으로 비어 있던 콘텐츠를 채운다.
+-- V17: 정본(swyp/시나리오/*.md) 기준으로 비어 있던 콘텐츠를 채운다.
 -- 스키마 변경 없음 — INSERT/UPDATE 만.
 -- 근거: .agent-team/02-market-analysis/gap-analysis.md (G01 G02 G04 G05 G18 G19)
 
