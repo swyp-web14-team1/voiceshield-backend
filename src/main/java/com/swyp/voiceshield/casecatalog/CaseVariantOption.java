@@ -2,6 +2,8 @@ package com.swyp.voiceshield.casecatalog;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -20,6 +22,13 @@ public class CaseVariantOption {
     @JoinColumn(name = "variant_id", nullable = false)
     private CaseVariant variant;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "option_kind", nullable = false, length = 20)
+    private CaseOptionKind optionKind;
+
+    @Column(name = "step_number", nullable = false)
+    private int stepNumber;
+
     @Column(name = "option_number", nullable = false)
     private int optionNumber;
 
@@ -34,6 +43,14 @@ public class CaseVariantOption {
 
     public String getId() {
         return id;
+    }
+
+    public CaseOptionKind getOptionKind() {
+        return optionKind;
+    }
+
+    public int getStepNumber() {
+        return stepNumber;
     }
 
     public int getOptionNumber() {

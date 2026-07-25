@@ -3,6 +3,7 @@ package com.swyp.voiceshield.casecatalog;
 import com.swyp.voiceshield.exception.ApiException;
 import com.swyp.voiceshield.exception.ErrorCode;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -47,8 +48,10 @@ public class CaseScenarioService {
         CaseScenario scenario = findScenario(scenarioId);
         CaseVariant variant = findVariant(scenario, channel);
         List<CaseVariantOption> selectedOptions = findSelectedOptions(variant, request.selectedChoiceOptionIds());
-        CaseVariantQuiz quiz = ensureQuizExists(variant);
-        List<CaseVariantOption> correctOptions = findCorrectOptions(variant);
+        CaseOptionKind kind = singleKindOf(selectedOptions);
+        // 퀴즈 채점은 기존대로 퀴즈가 없으면 실패한다. 행동 선택지는 퀴즈에 종속되지 않는다.
+        CaseVariantQuiz quiz = kind == CaseOptionKind.QUIZ ? ensureQuizExists(variant) : variant.getQuiz();
+        List<CaseVariantOption> correctOptions = findCorrectOptions(variant, kind, selectedOptions);
         boolean correct = selectedOptionIds(selectedOptions).equals(selectedOptionIds(correctOptions));
 
         return CaseChoiceEvaluationResponse.from(quiz, selectedOptions, correctOptions, correct);
@@ -99,7 +102,8 @@ public class CaseScenarioService {
             throw new ApiException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        Map<String, CaseVariantOption> optionsById = variant.getOptions().stream()
+        // 조회 범위는 퀴즈 보기 + 행동 선택지 전체다. 채점 범위는 아래에서 종류별로 좁힌다.
+        Map<String, CaseVariantOption> optionsById = variant.getAllOptions().stream()
                 .collect(Collectors.toMap(CaseVariantOption::getId, Function.identity()));
         return new LinkedHashSet<>(choiceOptionIds).stream()
                 .map(optionId -> {
@@ -112,10 +116,43 @@ public class CaseScenarioService {
                 .toList();
     }
 
-    private List<CaseVariantOption> findCorrectOptions(CaseVariant variant) {
-        List<CaseVariantOption> correctOptions = variant.getOptions().stream()
+    /**
+     * 제출된 선택지의 종류. 퀴즈 보기와 행동 선택지는 채점 기준이 달라 한 요청에 섞을 수 없다.
+     */
+    private CaseOptionKind singleKindOf(List<CaseVariantOption> selectedOptions) {
+        Set<CaseOptionKind> kinds = selectedOptions.stream()
+                .map(CaseVariantOption::getOptionKind)
+                .collect(Collectors.toSet());
+        if (kinds.size() > 1) {
+            throw new ApiException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        return kinds.iterator().next();
+    }
+
+    /** 제출된 행동 선택지의 회차. 정본 message 3건은 분기가 2회이고, 회차를 섞어 낼 수 없다. */
+    private int singleStepOf(List<CaseVariantOption> selectedOptions) {
+        Set<Integer> stepNumbers = selectedOptions.stream()
+                .map(CaseVariantOption::getStepNumber)
+                .collect(Collectors.toSet());
+        if (stepNumbers.size() > 1) {
+            throw new ApiException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        return stepNumbers.iterator().next();
+    }
+
+    private List<CaseVariantOption> findCorrectOptions(
+            CaseVariant variant,
+            CaseOptionKind kind,
+            List<CaseVariantOption> selectedOptions
+    ) {
+        Collection<CaseVariantOption> candidates = kind == CaseOptionKind.ACTION
+                ? variant.getActionChoices(singleStepOf(selectedOptions))
+                : variant.getOptions();
+
+        List<CaseVariantOption> correctOptions = candidates.stream()
                 .filter(CaseVariantOption::isCorrect)
-                .sorted(Comparator.comparingInt(CaseVariantOption::getOptionNumber))
+                .sorted(Comparator.comparingInt(CaseVariantOption::getStepNumber)
+                        .thenComparingInt(CaseVariantOption::getOptionNumber))
                 .toList();
         if (correctOptions.isEmpty()) {
             throw new ApiException(ErrorCode.CASE_CHOICE_OPTION_NOT_FOUND);

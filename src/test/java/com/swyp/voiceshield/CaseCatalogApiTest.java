@@ -7,8 +7,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -59,8 +59,7 @@ class CaseCatalogApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.caseName").value("휴대폰 고장"))
-                .andExpect(jsonPath("$.data.categoryId").doesNotExist())
-                .andExpect(jsonPath("$.data.categoryName").doesNotExist());
+                .andExpect(jsonPath("$.data.categoryName").value("가족 사칭"));
     }
 
     @Test
@@ -412,16 +411,132 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsScenarioStepWithoutQuizWhenVariantHasNoSeededQuizYet() throws Exception {
+    void returnsScenarioStepWithScriptAndQuizForFireAgencyVoice() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/voice/scenario-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-fire-agency"))
                 .andExpect(jsonPath("$.data.variantId").value("case-fire-agency-voice"))
                 .andExpect(jsonPath("$.data.channel").value("VOICE"))
-                .andExpect(jsonPath("$.data.quiz").value(nullValue()))
-                .andExpect(jsonPath("$.data.scriptLines", hasSize(0)))
-                .andExpect(jsonPath("$.data.choices", hasSize(0)));
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-fire-agency-voice-quiz-1"))
+                .andExpect(jsonPath("$.data.scriptLines", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data.scriptLines[0]").value("[전화벨]"))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true));
+    }
+
+    @Test
+    void returnsActionChoicesSeparatelyFromQuizOptions() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/voice/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                // 퀴즈 보기는 기존 계약 그대로 4건이어야 한다 — 행동 선택지가 섞이면 안 된다.
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
+                // 정본 '🎮 선택지' 4건. 이 케이스는 정답이 2개다.
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)))
+                .andExpect(jsonPath("$.data.actionChoices[1].optionText").value("기존에 저장된 아들 번호로 직접 전화한다."))
+                .andExpect(jsonPath("$.data.actionChoices[1].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.actionChoices[0].stepNumber").value(1));
+    }
+
+    @Test
+    void returnsTwoStepActionChoicesForMessageVariant() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/message/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                // 정본 message 는 대화 중 분기가 2회, 각 2지선다다.
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)))
+                .andExpect(jsonPath("$.data.actionChoices[0].stepNumber").value(1))
+                .andExpect(jsonPath("$.data.actionChoices[1].stepNumber").value(1))
+                .andExpect(jsonPath("$.data.actionChoices[2].stepNumber").value(2))
+                .andExpect(jsonPath("$.data.actionChoices[3].stepNumber").value(2))
+                .andExpect(jsonPath("$.data.actionChoices[2].optionText").value("송금을 진행한다."))
+                .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true));
+    }
+
+    @Test
+    void evaluatesSelectedActionChoice() throws Exception {
+        // scenario-step 이 내려준 actionChoices 의 choiceOptionId 를 그대로 POST 할 수 있어야 한다.
+        mockMvc.perform(post("/api/v1/cases/case-fire-agency/variants/voice/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-fire-agency-voice-action-1-2\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-fire-agency-voice-action-1-2"))
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.selectedOption.stepNumber").value(1))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(1)))
+                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-fire-agency-voice-action-1-2"));
+    }
+
+    @Test
+    void evaluatesActionChoiceAgainstItsOwnKindOnly() throws Exception {
+        // 행동 선택지 채점에 퀴즈 보기의 정답이 섞이면 안 된다.
+        mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/voice/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionIds\":[\"case-mobile-repair-voice-action-1-2\",\"case-mobile-repair-voice-action-1-4\"]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(2)))
+                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-mobile-repair-voice-action-1-2"))
+                .andExpect(jsonPath("$.data.correctOptions[1].optionId").value("case-mobile-repair-voice-action-1-4"));
+    }
+
+    @Test
+    void evaluatesActionChoiceWithinItsOwnStepOnly() throws Exception {
+        // 2회차 선택지를 냈으면 정답 범위도 2회차여야 한다. 1회차 정답이 섞이면 오답으로 뒤집힌다.
+        mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/message/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-mobile-repair-message-action-2-2\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.selectedOption.stepNumber").value(2))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(1)))
+                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-mobile-repair-message-action-2-2"));
+    }
+
+    @Test
+    void evaluatesWrongActionChoiceAsIncorrect() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/message/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-mobile-repair-message-action-1-1\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isCorrect").value(false))
+                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-mobile-repair-message-action-1-2"));
+    }
+
+    @Test
+    void rejectsChoiceRequestMixingQuizOptionAndActionChoice() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/voice/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionIds\":[\"case-mobile-repair-voice-option-3\",\"case-mobile-repair-voice-action-1-2\"]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("COMMON-001"));
+    }
+
+    @Test
+    void rejectsActionChoiceRequestMixingSteps() throws Exception {
+        mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/message/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionIds\":[\"case-mobile-repair-message-action-1-2\",\"case-mobile-repair-message-action-2-2\"]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("COMMON-001"));
+    }
+
+    @Test
+    void keepsQuizGradingUnaffectedByActionChoices() throws Exception {
+        // 기존 퀴즈 채점 계약 회귀 방지 — 행동 선택지가 같은 테이블에 있어도 정답 집합은 그대로다.
+        mockMvc.perform(post("/api/v1/cases/case-mobile-repair/variants/voice/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-mobile-repair-voice-option-3\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(1)))
+                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-mobile-repair-voice-option-3"));
     }
 
     @Test
