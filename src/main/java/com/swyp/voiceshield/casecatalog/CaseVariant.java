@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "case_variants")
@@ -57,8 +58,25 @@ public class CaseVariant {
         return content;
     }
 
+    /**
+     * 퀴즈 보기만 반환한다. 퀴즈 채점·조회 경로가 쓰는 기존 계약이다.
+     *
+     * <p>V14 부터 같은 테이블에 행동 선택지({@link CaseOptionKind#ACTION})가 함께 저장되므로
+     * 여기서 걸러내지 않으면 채점 대상에 행동 선택지가 섞인다.
+     */
     public Set<CaseVariantOption> getOptions() {
-        return options;
+        return options.stream()
+                .filter(option -> option.getOptionKind() == CaseOptionKind.QUIZ)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    /** 정본 '🎮 선택지' — 시뮬레이션 진행 중 사용자가 고르는 행동. 회차·번호 순. */
+    public List<CaseVariantOption> getActionChoices() {
+        return options.stream()
+                .filter(option -> option.getOptionKind() == CaseOptionKind.ACTION)
+                .sorted(Comparator.comparingInt(CaseVariantOption::getStepNumber)
+                        .thenComparingInt(CaseVariantOption::getOptionNumber))
+                .toList();
     }
 
     public CaseVariantQuiz getQuiz() {

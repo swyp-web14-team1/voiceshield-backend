@@ -7,8 +7,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -59,8 +59,7 @@ class CaseCatalogApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.caseName").value("휴대폰 고장"))
-                .andExpect(jsonPath("$.data.categoryId").doesNotExist())
-                .andExpect(jsonPath("$.data.categoryName").doesNotExist());
+                .andExpect(jsonPath("$.data.categoryName").value("가족 사칭"));
     }
 
     @Test
@@ -412,16 +411,49 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsScenarioStepWithoutQuizWhenVariantHasNoSeededQuizYet() throws Exception {
+    void returnsScenarioStepWithScriptAndQuizForFireAgencyVoice() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/voice/scenario-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-fire-agency"))
                 .andExpect(jsonPath("$.data.variantId").value("case-fire-agency-voice"))
                 .andExpect(jsonPath("$.data.channel").value("VOICE"))
-                .andExpect(jsonPath("$.data.quiz").value(nullValue()))
-                .andExpect(jsonPath("$.data.scriptLines", hasSize(0)))
-                .andExpect(jsonPath("$.data.choices", hasSize(0)));
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-fire-agency-voice-quiz-1"))
+                .andExpect(jsonPath("$.data.scriptLines", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data.scriptLines[0]").value("[전화벨]"))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true));
+    }
+
+    @Test
+    void returnsActionChoicesSeparatelyFromQuizOptions() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/voice/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                // 퀴즈 보기는 기존 계약 그대로 4건이어야 한다 — 행동 선택지가 섞이면 안 된다.
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
+                // 정본 '🎮 선택지' 4건. 이 케이스는 정답이 2개다.
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)))
+                .andExpect(jsonPath("$.data.actionChoices[1].optionText").value("기존에 저장된 아들 번호로 직접 전화한다."))
+                .andExpect(jsonPath("$.data.actionChoices[1].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.actionChoices[0].stepNumber").value(1));
+    }
+
+    @Test
+    void returnsTwoStepActionChoicesForMessageVariant() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/message/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                // 정본 message 는 대화 중 분기가 2회, 각 2지선다다.
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)))
+                .andExpect(jsonPath("$.data.actionChoices[0].stepNumber").value(1))
+                .andExpect(jsonPath("$.data.actionChoices[1].stepNumber").value(1))
+                .andExpect(jsonPath("$.data.actionChoices[2].stepNumber").value(2))
+                .andExpect(jsonPath("$.data.actionChoices[3].stepNumber").value(2))
+                .andExpect(jsonPath("$.data.actionChoices[2].optionText").value("송금을 진행한다."))
+                .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true));
     }
 
     @Test
