@@ -3,22 +3,11 @@
 -- 근거: .agent-team/02-market-analysis/gap-analysis.md (G01 G02 G04 G05 G18 G19)
 
 -- ---------------------------------------------------------------------------
--- G05: '메신저 피싱' 카테고리 행 부재 (CHECK 제약에는 있으나 행이 없었음)
+-- NOTE: '메신저 피싱' 카테고리와 case-new-number-family-transfer 연결은
+--       이번 범위에서 제외한다(기획 결정 — 메신저 사기는 차기 범위).
+--       해당 시나리오는 category_id 가 NULL 이라 카탈로그에 노출되지 않는다.
+--       아래 콘텐츠 시드에는 포함해 두었으므로, 차기에 카테고리만 연결하면 바로 동작한다.
 -- ---------------------------------------------------------------------------
-INSERT INTO categories (category_id, category_name)
-SELECT 'category-messenger-phishing', '메신저 피싱'
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM categories
-    WHERE category_id = 'category-messenger-phishing'
-);
-
--- ---------------------------------------------------------------------------
--- G04: case-new-number-family-transfer 의 category_id 미지정 (V6이 4건만 UPDATE)
--- ---------------------------------------------------------------------------
-UPDATE case_scenarios
-SET category_id = 'category-messenger-phishing'
-WHERE scenario_id = 'case-new-number-family-transfer';
 
 -- ---------------------------------------------------------------------------
 -- G01: 난이도 — 전 시나리오 NULL 이었음. 정본 프로퍼티(난이도) 기준.
