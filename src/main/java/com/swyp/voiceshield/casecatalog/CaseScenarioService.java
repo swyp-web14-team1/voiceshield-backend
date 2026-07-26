@@ -31,6 +31,15 @@ public class CaseScenarioService {
     }
 
     @Transactional(readOnly = true)
+    public CaseScenarioStepResponse getScenarioStep(String scenarioId, String channel) {
+        CaseScenario scenario = findScenario(scenarioId);
+        CaseVariant variant = findVariant(scenario, channel);
+        List<String> scriptLines = splitScriptLines(variant);
+
+        return CaseScenarioStepResponse.from(scenario, variant, scriptLines);
+    }
+
+    @Transactional(readOnly = true)
     public CaseSimulationStepResponse getSimulationStep(String scenarioId, String channel) {
         CaseScenario scenario = findScenario(scenarioId);
         CaseVariant variant = findVariant(scenario, channel);

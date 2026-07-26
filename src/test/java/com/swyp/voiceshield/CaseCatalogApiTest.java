@@ -18,6 +18,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class CaseCatalogApiTest {
 
+    private static final VariantStepContract[] ALL_VARIANT_CONTRACTS = {
+            new VariantStepContract("case-mobile-repair", "voice", "case-mobile-repair-voice", "VOICE"),
+            new VariantStepContract("case-mobile-repair", "message", "case-mobile-repair-message", "MESSAGE"),
+            new VariantStepContract("case-return-delivery", "voice", "case-return-delivery-voice", "VOICE"),
+            new VariantStepContract("case-return-delivery", "message", "case-return-delivery-message", "MESSAGE"),
+            new VariantStepContract("case-fire-agency", "voice", "case-fire-agency-voice", "VOICE"),
+            new VariantStepContract("case-fire-agency", "message", "case-fire-agency-message", "MESSAGE"),
+            new VariantStepContract("case-special-investment", "voice", "case-special-investment-voice", "VOICE"),
+            new VariantStepContract("case-special-investment", "message", "case-special-investment-message", "MESSAGE"),
+            new VariantStepContract("case-new-number-family-transfer", "voice", "case-new-number-family-transfer-voice", "VOICE"),
+            new VariantStepContract("case-new-number-family-transfer", "message", "case-new-number-family-transfer-message", "MESSAGE")
+    };
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -100,6 +113,20 @@ class CaseCatalogApiTest {
     }
 
     @Test
+    void keepsScenarioStepBackwardCompatible() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/voice/scenario-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-mobile-repair"))
+                .andExpect(jsonPath("$.data.variantId").value("case-mobile-repair-voice"))
+                .andExpect(jsonPath("$.data.channel").value("VOICE"))
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-mobile-repair-voice-quiz-1"))
+                .andExpect(jsonPath("$.data.scriptLines", hasSize(23)))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)));
+    }
+
+    @Test
     void returnsMessageQuizStepWithQuizAndChoices() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/message/quiz-step"))
                 .andExpect(status().isOk())
@@ -118,6 +145,20 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.choices[1].isCorrect").value(true))
                 .andExpect(jsonPath("$.data.actionChoices").doesNotExist())
                 .andExpect(jsonPath("$.data.scriptLines").doesNotExist());
+    }
+
+    @Test
+    void returnsSimulationStepForAllScenarioVariants() throws Exception {
+        for (VariantStepContract contract : ALL_VARIANT_CONTRACTS) {
+            assertSimulationStepContract(contract);
+        }
+    }
+
+    @Test
+    void returnsQuizStepForAllScenarioVariants() throws Exception {
+        for (VariantStepContract contract : ALL_VARIANT_CONTRACTS) {
+            assertQuizStepContract(contract);
+        }
     }
 
     @Test
@@ -589,5 +630,41 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("COMMON-004"))
                 .andExpect(jsonPath("$.error.message").value("지원하지 않는 HTTP 메서드입니다."));
+    }
+
+    private void assertSimulationStepContract(VariantStepContract contract) throws Exception {
+        mockMvc.perform(get("/api/v1/cases/%s/variants/%s/simulation-step"
+                        .formatted(contract.scenarioId(), contract.channelPath())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value(contract.scenarioId()))
+                .andExpect(jsonPath("$.data.variantId").value(contract.variantId()))
+                .andExpect(jsonPath("$.data.channel").value(contract.channel()))
+                .andExpect(jsonPath("$.data.scriptLines", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data.quiz").doesNotExist())
+                .andExpect(jsonPath("$.data.choices").doesNotExist());
+    }
+
+    private void assertQuizStepContract(VariantStepContract contract) throws Exception {
+        mockMvc.perform(get("/api/v1/cases/%s/variants/%s/quiz-step"
+                        .formatted(contract.scenarioId(), contract.channelPath())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value(contract.scenarioId()))
+                .andExpect(jsonPath("$.data.variantId").value(contract.variantId()))
+                .andExpect(jsonPath("$.data.channel").value(contract.channel()))
+                .andExpect(jsonPath("$.data.quiz.quizId").exists())
+                .andExpect(jsonPath("$.data.choices", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data.actionChoices").doesNotExist())
+                .andExpect(jsonPath("$.data.scriptLines").doesNotExist());
+    }
+
+    private record VariantStepContract(
+            String scenarioId,
+            String channelPath,
+            String variantId,
+            String channel
+    ) {
     }
 }
