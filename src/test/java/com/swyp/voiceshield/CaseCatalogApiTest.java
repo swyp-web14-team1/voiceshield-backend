@@ -18,6 +18,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class CaseCatalogApiTest {
 
+    private static final VariantStepContract[] ALL_VARIANT_CONTRACTS = {
+            new VariantStepContract("case-mobile-repair", "voice", "case-mobile-repair-voice", "VOICE"),
+            new VariantStepContract("case-mobile-repair", "message", "case-mobile-repair-message", "MESSAGE"),
+            new VariantStepContract("case-return-delivery", "voice", "case-return-delivery-voice", "VOICE"),
+            new VariantStepContract("case-return-delivery", "message", "case-return-delivery-message", "MESSAGE"),
+            new VariantStepContract("case-fire-agency", "voice", "case-fire-agency-voice", "VOICE"),
+            new VariantStepContract("case-fire-agency", "message", "case-fire-agency-message", "MESSAGE"),
+            new VariantStepContract("case-special-investment", "voice", "case-special-investment-voice", "VOICE"),
+            new VariantStepContract("case-special-investment", "message", "case-special-investment-message", "MESSAGE"),
+            new VariantStepContract("case-new-number-family-transfer", "voice", "case-new-number-family-transfer-voice", "VOICE"),
+            new VariantStepContract("case-new-number-family-transfer", "message", "case-new-number-family-transfer-message", "MESSAGE")
+    };
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -80,7 +93,27 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsVoiceScenarioStepWithScriptLinesAndChoices() throws Exception {
+    void returnsVoiceSimulationStepWithScriptLinesAndActionChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/voice/simulation-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value("case-mobile-repair"))
+                .andExpect(jsonPath("$.data.variantId").value("case-mobile-repair-voice"))
+                .andExpect(jsonPath("$.data.channel").value("VOICE"))
+                .andExpect(jsonPath("$.data.scriptLines", hasSize(23)))
+                .andExpect(jsonPath("$.data.scriptLines[0]").value("[전화벨]"))
+                .andExpect(jsonPath("$.data.scriptLines[1]").value("나"))
+                .andExpect(jsonPath("$.data.scriptLines[2]").value("\"여보세요?\""))
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)))
+                .andExpect(jsonPath("$.data.actionChoices[1].optionText").value("기존에 저장된 아들 번호로 직접 전화한다."))
+                .andExpect(jsonPath("$.data.actionChoices[1].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz").doesNotExist())
+                .andExpect(jsonPath("$.data.choices").doesNotExist());
+    }
+
+    @Test
+    void keepsScenarioStepBackwardCompatible() throws Exception {
         mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/voice/scenario-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -88,23 +121,14 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.variantId").value("case-mobile-repair-voice"))
                 .andExpect(jsonPath("$.data.channel").value("VOICE"))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-mobile-repair-voice-quiz-1"))
-                .andExpect(jsonPath("$.data.quiz.quizNumber").value(1))
-                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 가장 강하게 의심할 수 있는 단서는 무엇일까요?"))
                 .andExpect(jsonPath("$.data.scriptLines", hasSize(23)))
-                .andExpect(jsonPath("$.data.scriptLines[0]").value("[전화벨]"))
-                .andExpect(jsonPath("$.data.scriptLines[1]").value("나"))
-                .andExpect(jsonPath("$.data.scriptLines[2]").value("\"여보세요?\""))
                 .andExpect(jsonPath("$.data.choices", hasSize(4)))
-                .andExpect(jsonPath("$.data.choices[0].optionText").value("휴대폰이 고장 나서 다른 번호로 연락했다고 말했다."))
-                .andExpect(jsonPath("$.data.choices[1].optionText").value("병원에서 치료를 받고 있다고 말했다."))
-                .andExpect(jsonPath("$.data.choices[2].optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
-                .andExpect(jsonPath("$.data.choices[3].optionText").value("간호사가 기다리고 있다고 말했다."))
-                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true));
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)));
     }
 
     @Test
-    void returnsMessageScenarioStepWithQuizAndChoices() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/message/scenario-step"))
+    void returnsMessageQuizStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/message/quiz-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-mobile-repair"))
@@ -118,7 +142,23 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.choices[1].optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
                 .andExpect(jsonPath("$.data.choices[2].optionText").value("기존 번호로는 연락하지 말라고 했다."))
                 .andExpect(jsonPath("$.data.choices[3].optionText").value("다쳤다고 말했다."))
-                .andExpect(jsonPath("$.data.choices[1].isCorrect").value(true));
+                .andExpect(jsonPath("$.data.choices[1].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.actionChoices").doesNotExist())
+                .andExpect(jsonPath("$.data.scriptLines").doesNotExist());
+    }
+
+    @Test
+    void returnsSimulationStepForAllScenarioVariants() throws Exception {
+        for (VariantStepContract contract : ALL_VARIANT_CONTRACTS) {
+            assertSimulationStepContract(contract);
+        }
+    }
+
+    @Test
+    void returnsQuizStepForAllScenarioVariants() throws Exception {
+        for (VariantStepContract contract : ALL_VARIANT_CONTRACTS) {
+            assertQuizStepContract(contract);
+        }
     }
 
     @Test
@@ -160,8 +200,8 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsReturnDeliveryVoiceScenarioStepWithQuizAndChoices() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-return-delivery/variants/voice/scenario-step"))
+    void returnsReturnDeliveryVoiceQuizStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-return-delivery/variants/voice/quiz-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-return-delivery"))
@@ -214,8 +254,8 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsReturnDeliveryMessageScenarioStepWithQuizAndChoices() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-return-delivery/variants/message/scenario-step"))
+    void returnsReturnDeliveryMessageQuizStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-return-delivery/variants/message/quiz-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-return-delivery"))
@@ -255,8 +295,8 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsFireAgencyMessageScenarioStepWithQuizAndChoices() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/message/scenario-step"))
+    void returnsFireAgencyMessageQuizStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/message/quiz-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-fire-agency"))
@@ -293,8 +333,8 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsSpecialInvestmentMessageScenarioStepWithQuizAndChoices() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-special-investment/variants/message/scenario-step"))
+    void returnsSpecialInvestmentMessageQuizStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-special-investment/variants/message/quiz-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-special-investment"))
@@ -372,8 +412,8 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsNewNumberFamilyTransferVoiceScenarioStepWithQuizAndChoices() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-new-number-family-transfer/variants/voice/scenario-step"))
+    void returnsNewNumberFamilyTransferVoiceQuizStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-new-number-family-transfer/variants/voice/quiz-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-new-number-family-transfer"))
@@ -381,14 +421,14 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.channel").value("VOICE"))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-new-number-family-transfer-voice-quiz-1"))
                 .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 판단할 수 있는 가장 결정적인 단서는 무엇일까요?"))
-                .andExpect(jsonPath("$.data.scriptLines[0]").value("모르는 번호로 전화가 걸려왔습니다."))
-                .andExpect(jsonPath("$.data.scriptLines[2]").value("[전화벨]"))
                 .andExpect(jsonPath("$.data.choices", hasSize(4)))
                 .andExpect(jsonPath("$.data.choices[0].optionText").value("휴대폰이 고장 났다고 말했다."))
                 .andExpect(jsonPath("$.data.choices[1].optionText").value("급하게 결제가 필요하다고 말했다."))
                 .andExpect(jsonPath("$.data.choices[2].optionText").value("새 번호로 연락해 즉시 송금을 요청했다."))
                 .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true))
-                .andExpect(jsonPath("$.data.choices[3].optionText").value("내일 돈을 돌려주겠다고 말했다."));
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("내일 돈을 돌려주겠다고 말했다."))
+                .andExpect(jsonPath("$.data.actionChoices").doesNotExist())
+                .andExpect(jsonPath("$.data.scriptLines").doesNotExist());
     }
 
     @Test
@@ -408,8 +448,8 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsNewNumberFamilyTransferMessageScenarioStepWithQuizAndChoices() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-new-number-family-transfer/variants/message/scenario-step"))
+    void returnsNewNumberFamilyTransferMessageQuizStepWithQuizAndChoices() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-new-number-family-transfer/variants/message/quiz-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-new-number-family-transfer"))
@@ -417,13 +457,14 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.channel").value("MESSAGE"))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-new-number-family-transfer-message-quiz-1"))
                 .andExpect(jsonPath("$.data.quiz.question").value("다음 중 메신저사기임을 판단할 수 있는 가장 결정적인 단서는 무엇일까요?"))
-                .andExpect(jsonPath("$.data.scriptLines[0]").value("메신저로 자녀를 사칭한 사람이 급하게 연락을 보내왔습니다."))
                 .andExpect(jsonPath("$.data.choices", hasSize(4)))
                 .andExpect(jsonPath("$.data.choices[0].optionText").value("휴대폰이 고장 나 새 번호로 연락했다고 말했다."))
                 .andExpect(jsonPath("$.data.choices[1].optionText").value("결제가 급하다고 말했다."))
                 .andExpect(jsonPath("$.data.choices[2].optionText").value("통화는 안 된다며 메신저로만 송금을 요청했다."))
                 .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true))
-                .andExpect(jsonPath("$.data.choices[3].optionText").value("내일 돈을 돌려주겠다고 말했다."));
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("내일 돈을 돌려주겠다고 말했다."))
+                .andExpect(jsonPath("$.data.actionChoices").doesNotExist())
+                .andExpect(jsonPath("$.data.scriptLines").doesNotExist());
     }
 
     @Test
@@ -443,39 +484,39 @@ class CaseCatalogApiTest {
     }
 
     @Test
-    void returnsScenarioStepWithScriptAndQuizForFireAgencyVoice() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/voice/scenario-step"))
+    void returnsVoiceSimulationStepForFireAgency() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-fire-agency/variants/voice/simulation-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.scenarioId").value("case-fire-agency"))
                 .andExpect(jsonPath("$.data.variantId").value("case-fire-agency-voice"))
                 .andExpect(jsonPath("$.data.channel").value("VOICE"))
-                .andExpect(jsonPath("$.data.quiz.quizId").value("case-fire-agency-voice-quiz-1"))
                 .andExpect(jsonPath("$.data.scriptLines", hasSize(greaterThan(0))))
                 .andExpect(jsonPath("$.data.scriptLines[0]").value("[전화벨]"))
-                .andExpect(jsonPath("$.data.choices", hasSize(4)))
-                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true));
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)))
+                .andExpect(jsonPath("$.data.actionChoices[1].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz").doesNotExist())
+                .andExpect(jsonPath("$.data.choices").doesNotExist());
     }
 
     @Test
     void returnsActionChoicesSeparatelyFromQuizOptions() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/voice/scenario-step"))
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/voice/simulation-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                // 퀴즈 보기는 기존 계약 그대로 4건이어야 한다 — 행동 선택지가 섞이면 안 된다.
-                .andExpect(jsonPath("$.data.choices", hasSize(4)))
-                .andExpect(jsonPath("$.data.choices[2].optionText").value("병원비를 개인 계좌로 바로 송금해 달라고 했다."))
                 // 정본 '🎮 선택지' 4건. 이 케이스는 정답이 2개다.
                 .andExpect(jsonPath("$.data.actionChoices", hasSize(4)))
                 .andExpect(jsonPath("$.data.actionChoices[1].optionText").value("기존에 저장된 아들 번호로 직접 전화한다."))
                 .andExpect(jsonPath("$.data.actionChoices[1].isCorrect").value(true))
                 .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true))
-                .andExpect(jsonPath("$.data.actionChoices[0].stepNumber").value(1));
+                .andExpect(jsonPath("$.data.actionChoices[0].stepNumber").value(1))
+                .andExpect(jsonPath("$.data.choices").doesNotExist())
+                .andExpect(jsonPath("$.data.quiz").doesNotExist());
     }
 
     @Test
     void returnsTwoStepActionChoicesForMessageVariant() throws Exception {
-        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/message/scenario-step"))
+        mockMvc.perform(get("/api/v1/cases/case-mobile-repair/variants/message/simulation-step"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 // 정본 message 는 대화 중 분기가 2회, 각 2지선다다.
@@ -485,12 +526,14 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.actionChoices[2].stepNumber").value(2))
                 .andExpect(jsonPath("$.data.actionChoices[3].stepNumber").value(2))
                 .andExpect(jsonPath("$.data.actionChoices[2].optionText").value("송금을 진행한다."))
-                .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true));
+                .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.choices").doesNotExist())
+                .andExpect(jsonPath("$.data.quiz").doesNotExist());
     }
 
     @Test
     void evaluatesSelectedActionChoice() throws Exception {
-        // scenario-step 이 내려준 actionChoices 의 choiceOptionId 를 그대로 POST 할 수 있어야 한다.
+        // simulation-step 이 내려준 actionChoices 의 choiceOptionId 를 그대로 POST 할 수 있어야 한다.
         mockMvc.perform(post("/api/v1/cases/case-fire-agency/variants/voice/choices")
                         .contentType("application/json")
                         .content("{\"choiceOptionId\":\"case-fire-agency-voice-action-1-2\"}"))
@@ -587,5 +630,41 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("COMMON-004"))
                 .andExpect(jsonPath("$.error.message").value("지원하지 않는 HTTP 메서드입니다."));
+    }
+
+    private void assertSimulationStepContract(VariantStepContract contract) throws Exception {
+        mockMvc.perform(get("/api/v1/cases/%s/variants/%s/simulation-step"
+                        .formatted(contract.scenarioId(), contract.channelPath())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value(contract.scenarioId()))
+                .andExpect(jsonPath("$.data.variantId").value(contract.variantId()))
+                .andExpect(jsonPath("$.data.channel").value(contract.channel()))
+                .andExpect(jsonPath("$.data.scriptLines", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data.quiz").doesNotExist())
+                .andExpect(jsonPath("$.data.choices").doesNotExist());
+    }
+
+    private void assertQuizStepContract(VariantStepContract contract) throws Exception {
+        mockMvc.perform(get("/api/v1/cases/%s/variants/%s/quiz-step"
+                        .formatted(contract.scenarioId(), contract.channelPath())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.scenarioId").value(contract.scenarioId()))
+                .andExpect(jsonPath("$.data.variantId").value(contract.variantId()))
+                .andExpect(jsonPath("$.data.channel").value(contract.channel()))
+                .andExpect(jsonPath("$.data.quiz.quizId").exists())
+                .andExpect(jsonPath("$.data.choices", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.data.actionChoices").doesNotExist())
+                .andExpect(jsonPath("$.data.scriptLines").doesNotExist());
+    }
+
+    private record VariantStepContract(
+            String scenarioId,
+            String channelPath,
+            String variantId,
+            String channel
+    ) {
     }
 }
