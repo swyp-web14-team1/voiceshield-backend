@@ -209,48 +209,33 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.channel").value("VOICE"))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-voice-quiz-1"))
                 .andExpect(jsonPath("$.data.quiz.quizNumber").value(1))
-                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기임을 판단할 수 있는 결정적인 단서를 모두 선택하세요."))
-                .andExpect(jsonPath("$.data.choices", hasSize(3)))
-                .andExpect(jsonPath("$.data.choices[0].optionText").value("택배 기사가 방문 전 전화한다."))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 택배 사기 문자임을 가장 강하게 의심할 수 있는 단서는 무엇인가요?"))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("택배 기사가 방문 전에 전화를 한다."))
                 .andExpect(jsonPath("$.data.choices[0].isCorrect").value(false))
-                .andExpect(jsonPath("$.data.choices[1].optionText").value("개인 휴대전화 번호로 주소를 다시 요구한다."))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("문자 링크 접속 후 앱 설치를 요구한다."))
                 .andExpect(jsonPath("$.data.choices[1].isCorrect").value(true))
-                .andExpect(jsonPath("$.data.choices[2].optionText").value("문자 링크 접속 및 앱 설치를 요구한다."))
-                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true));
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("배송이 하루 정도 지연되었다고 안내한다."))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(false))
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("배송 주소를 다시 한 번 확인해 달라고 요청한다."))
+                .andExpect(jsonPath("$.data.choices[3].isCorrect").value(false));
     }
 
     @Test
-    void evaluatesPartiallySelectedReturnDeliveryVoiceScenarioChoiceAsIncorrect() throws Exception {
+    void evaluatesSelectedReturnDeliveryVoiceScenarioChoice() throws Exception {
         mockMvc.perform(post("/api/v1/cases/case-return-delivery/variants/voice/choices")
                         .contentType("application/json")
-                        .content("{\"choiceOptionId\":\"case-return-delivery-voice-option-3\"}"))
+                        .content("{\"choiceOptionId\":\"case-return-delivery-voice-option-2\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.choiceOptionId").value("case-return-delivery-voice-option-3"))
-                .andExpect(jsonPath("$.data.optionNumber").value(3))
-                .andExpect(jsonPath("$.data.isCorrect").value(false))
-                .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-voice-quiz-1"))
-                .andExpect(jsonPath("$.data.selectedOption.optionText").value("문자 링크 접속 및 앱 설치를 요구한다."))
-                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-return-delivery-voice-option-2"))
-                .andExpect(jsonPath("$.data.correctOptions", hasSize(2)))
-                .andExpect(jsonPath("$.data.explanation").value("택배 기사가 방문 전에 연락하는 것은 일반적인 상황일 수 있습니다. 하지만 개인 번호를 이용해 개인정보를 다시 요구하거나, 문자 링크를 통한 주소 입력과 앱 설치를 요구하는 경우는 대표적인 택배 사칭 피싱 수법입니다."));
-    }
-
-    @Test
-    void evaluatesSelectedReturnDeliveryVoiceScenarioChoices() throws Exception {
-        mockMvc.perform(post("/api/v1/cases/case-return-delivery/variants/voice/choices")
-                        .contentType("application/json")
-                        .content("{\"choiceOptionIds\":[\"case-return-delivery-voice-option-2\",\"case-return-delivery-voice-option-3\"]}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.choiceOptionIds", hasSize(2)))
-                .andExpect(jsonPath("$.data.choiceOptionIds[0]").value("case-return-delivery-voice-option-2"))
-                .andExpect(jsonPath("$.data.choiceOptionIds[1]").value("case-return-delivery-voice-option-3"))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-return-delivery-voice-option-2"))
+                .andExpect(jsonPath("$.data.optionNumber").value(2))
                 .andExpect(jsonPath("$.data.isCorrect").value(true))
-                .andExpect(jsonPath("$.data.selectedOptions", hasSize(2)))
-                .andExpect(jsonPath("$.data.correctOptions", hasSize(2)))
-                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-return-delivery-voice-option-2"))
-                .andExpect(jsonPath("$.data.correctOptions[1].optionId").value("case-return-delivery-voice-option-3"));
+                .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-voice-quiz-1"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("문자 링크 접속 후 앱 설치를 요구한다."))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-return-delivery-voice-option-2"))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(1)))
+                .andExpect(jsonPath("$.data.explanation").value("정상적인 택배사는 문자 링크를 통해 앱 설치를 요구하지 않습니다. 출처가 불분명한 링크를 클릭하거나 앱을 설치하면 악성 앱이 설치되어 개인정보와 금융정보가 탈취될 수 있습니다."));
     }
 
     @Test
@@ -263,35 +248,34 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.channel").value("MESSAGE"))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-message-quiz-1"))
                 .andExpect(jsonPath("$.data.quiz.quizNumber").value(1))
-                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 사기 문자의 결정적인 단서를 모두 선택하세요."))
+                .andExpect(jsonPath("$.data.quiz.question").value("다음 중 택배 사기 문자임을 가장 강하게 의심할 수 있는 단서는 무엇인가요?"))
                 .andExpect(jsonPath("$.data.choices", hasSize(4)))
-                .andExpect(jsonPath("$.data.choices[0].optionText").value("반품 신청 후 문자가 왔다."))
+                .andExpect(jsonPath("$.data.choices[0].optionText").value("택배 기사가 방문 전에 전화를 한다."))
                 .andExpect(jsonPath("$.data.choices[0].isCorrect").value(false))
-                .andExpect(jsonPath("$.data.choices[1].optionText").value("공식 홈페이지가 아닌 단축 URL 링크를 보냈다."))
+                .andExpect(jsonPath("$.data.choices[1].optionText").value("문자 링크 접속 후 앱 설치를 요구한다."))
                 .andExpect(jsonPath("$.data.choices[1].isCorrect").value(true))
-                .andExpect(jsonPath("$.data.choices[2].optionText").value("개인정보를 다시 입력하도록 요구했다."))
-                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true))
-                .andExpect(jsonPath("$.data.choices[3].optionText").value("택배 관련 문자가 왔다."))
+                .andExpect(jsonPath("$.data.choices[2].optionText").value("배송이 하루 정도 지연되었다고 안내한다."))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(false))
+                .andExpect(jsonPath("$.data.choices[3].optionText").value("배송 주소를 다시 한 번 확인해 달라고 요청한다."))
                 .andExpect(jsonPath("$.data.choices[3].isCorrect").value(false));
     }
 
     @Test
-    void evaluatesSelectedReturnDeliveryMessageScenarioChoices() throws Exception {
+    void evaluatesSelectedReturnDeliveryMessageScenarioChoice() throws Exception {
         mockMvc.perform(post("/api/v1/cases/case-return-delivery/variants/message/choices")
                         .contentType("application/json")
-                        .content("{\"choiceOptionIds\":[\"case-return-delivery-message-option-2\",\"case-return-delivery-message-option-3\"]}"))
+                        .content("{\"choiceOptionId\":\"case-return-delivery-message-option-2\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.choiceOptionIds", hasSize(2)))
-                .andExpect(jsonPath("$.data.choiceOptionIds[0]").value("case-return-delivery-message-option-2"))
-                .andExpect(jsonPath("$.data.choiceOptionIds[1]").value("case-return-delivery-message-option-3"))
+                .andExpect(jsonPath("$.data.choiceOptionId").value("case-return-delivery-message-option-2"))
+                .andExpect(jsonPath("$.data.optionNumber").value(2))
                 .andExpect(jsonPath("$.data.isCorrect").value(true))
                 .andExpect(jsonPath("$.data.quiz.quizId").value("case-return-delivery-message-quiz-1"))
-                .andExpect(jsonPath("$.data.selectedOptions", hasSize(2)))
-                .andExpect(jsonPath("$.data.correctOptions", hasSize(2)))
-                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-return-delivery-message-option-2"))
-                .andExpect(jsonPath("$.data.correctOptions[1].optionId").value("case-return-delivery-message-option-3"))
-                .andExpect(jsonPath("$.data.explanation").value("반품 신청 이후 문자가 오는 것 자체는 정상적인 상황일 수 있습니다. 하지만 출처가 불분명한 링크를 보내거나 개인정보를 다시 입력하도록 유도하는 경우는 대표적인 택배 피싱 수법입니다."));
+                .andExpect(jsonPath("$.data.selectedOption.optionId").value("case-return-delivery-message-option-2"))
+                .andExpect(jsonPath("$.data.selectedOption.optionText").value("문자 링크 접속 후 앱 설치를 요구한다."))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(1)))
+                .andExpect(jsonPath("$.data.correctOption.optionId").value("case-return-delivery-message-option-2"))
+                .andExpect(jsonPath("$.data.explanation").value("정상적인 택배사는 문자 링크를 통해 앱 설치를 요구하지 않습니다. 출처가 불분명한 링크를 클릭하거나 앱을 설치하면 악성 앱이 설치되어 개인정보와 금융정보가 탈취될 수 있습니다."));
     }
 
     @Test
