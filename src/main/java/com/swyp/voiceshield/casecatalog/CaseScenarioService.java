@@ -31,12 +31,21 @@ public class CaseScenarioService {
     }
 
     @Transactional(readOnly = true)
-    public CaseScenarioStepResponse getScenarioStep(String scenarioId, String channel) {
+    public CaseSimulationStepResponse getSimulationStep(String scenarioId, String channel) {
         CaseScenario scenario = findScenario(scenarioId);
         CaseVariant variant = findVariant(scenario, channel);
         List<String> scriptLines = splitScriptLines(variant);
 
-        return CaseScenarioStepResponse.from(scenario, variant, scriptLines);
+        return CaseSimulationStepResponse.from(scenario, variant, scriptLines);
+    }
+
+    @Transactional(readOnly = true)
+    public CaseQuizStepResponse getQuizStep(String scenarioId, String channel) {
+        CaseScenario scenario = findScenario(scenarioId);
+        CaseVariant variant = findVariant(scenario, channel);
+
+        ensureQuizExists(variant);
+        return CaseQuizStepResponse.from(scenario, variant);
     }
 
     @Transactional(readOnly = true)
@@ -50,7 +59,7 @@ public class CaseScenarioService {
         List<CaseVariantOption> selectedOptions = findSelectedOptions(variant, request.selectedChoiceOptionIds());
         CaseOptionKind kind = singleKindOf(selectedOptions);
         // 퀴즈 채점은 기존대로 퀴즈가 없으면 실패한다. 행동 선택지는 퀴즈에 종속되지 않는다.
-        CaseVariantQuiz quiz = kind == CaseOptionKind.QUIZ ? ensureQuizExists(variant) : variant.getQuiz();
+        CaseVariantQuiz quiz = kind == CaseOptionKind.QUIZ ? ensureQuizExists(variant) : null;
         List<CaseVariantOption> correctOptions = findCorrectOptions(variant, kind, selectedOptions);
         boolean correct = selectedOptionIds(selectedOptions).equals(selectedOptionIds(correctOptions));
 

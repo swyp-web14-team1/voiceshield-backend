@@ -24,12 +24,20 @@ public class CaseScenarioController {
         return ApiResponse.success(caseScenarioService.getScenario(scenarioId));
     }
 
-    @GetMapping("/{scenarioId}/variants/{channel}/scenario-step")
-    public ApiResponse<CaseScenarioStepResponse> getScenarioStep(
+    @GetMapping({"/{scenarioId}/variants/{channel}/scenario-step", "/{scenarioId}/variants/{channel}/simulation-step"})
+    public ApiResponse<CaseSimulationStepResponse> getSimulationStep(
             @PathVariable String scenarioId,
             @PathVariable String channel
     ) {
-        return ApiResponse.success(caseScenarioService.getScenarioStep(scenarioId, channel));
+        return ApiResponse.success(caseScenarioService.getSimulationStep(scenarioId, channel));
+    }
+
+    @GetMapping("/{scenarioId}/variants/{channel}/quiz-step")
+    public ApiResponse<CaseQuizStepResponse> getQuizStep(
+            @PathVariable String scenarioId,
+            @PathVariable String channel
+    ) {
+        return ApiResponse.success(caseScenarioService.getQuizStep(scenarioId, channel));
     }
 
     @PostMapping("/{scenarioId}/variants/{channel}/choices")
