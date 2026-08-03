@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
@@ -28,7 +29,11 @@ class CaseCatalogApiTest {
             new VariantStepContract("case-special-investment", "voice", "case-special-investment-voice", "VOICE"),
             new VariantStepContract("case-special-investment", "message", "case-special-investment-message", "MESSAGE"),
             new VariantStepContract("case-new-number-family-transfer", "voice", "case-new-number-family-transfer-voice", "VOICE"),
-            new VariantStepContract("case-new-number-family-transfer", "message", "case-new-number-family-transfer-message", "MESSAGE")
+            new VariantStepContract("case-new-number-family-transfer", "message", "case-new-number-family-transfer-message", "MESSAGE"),
+            new VariantStepContract("case-call-interception", "voice", "case-call-interception-voice", "VOICE"),
+            new VariantStepContract("case-call-interception", "message", "case-call-interception-message", "MESSAGE"),
+            new VariantStepContract("case-cyber-investigation", "voice", "case-cyber-investigation-voice", "VOICE"),
+            new VariantStepContract("case-cyber-investigation", "message", "case-cyber-investigation-message", "MESSAGE")
     };
 
     @Autowired
@@ -54,9 +59,10 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.categoryId").value("category-institution-impersonation"))
                 .andExpect(jsonPath("$.data.categoryName").value("기관 사칭"))
-                .andExpect(jsonPath("$.data.cases", hasSize(1)))
-                .andExpect(jsonPath("$.data.cases[0].scenarioId").value("case-fire-agency"))
-                .andExpect(jsonPath("$.data.cases[0].caseName").value("소방기관 사칭"));
+                // 순서는 단언하지 않는다. 정렬이 case_name 한글 오름차순이라 DB 콜레이션에 좌우된다.
+                .andExpect(jsonPath("$.data.cases", hasSize(3)))
+                .andExpect(jsonPath("$.data.cases[*].scenarioId", containsInAnyOrder(
+                        "case-fire-agency", "case-call-interception", "case-cyber-investigation")));
     }
 
     @Test
@@ -513,6 +519,35 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.actionChoices[3].isCorrect").value(true))
                 .andExpect(jsonPath("$.data.choices").doesNotExist())
                 .andExpect(jsonPath("$.data.quiz").doesNotExist());
+    }
+
+    @Test
+    void returnsThreeStepActionChoicesForCallInterception() throws Exception {
+        // 전화 가로채기 정본은 분기가 3회다. 기존 최대는 2회였으므로 step_number 가 3까지
+        // 늘어나도 계약이 유지되는지 확인한다. MESSAGE 는 회차마다 2지선다다.
+        mockMvc.perform(get("/api/v1/cases/case-call-interception/variants/message/simulation-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(6)))
+                .andExpect(jsonPath("$.data.actionChoices[0].stepNumber").value(1))
+                .andExpect(jsonPath("$.data.actionChoices[2].stepNumber").value(2))
+                .andExpect(jsonPath("$.data.actionChoices[4].stepNumber").value(3))
+                .andExpect(jsonPath("$.data.actionChoices[5].stepNumber").value(3))
+                .andExpect(jsonPath("$.data.actionChoices[5].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.quiz").doesNotExist());
+    }
+
+    @Test
+    void evaluatesThirdStepActionChoiceWithinItsOwnStep() throws Exception {
+        // 3회차 선택지의 정답 범위가 3회차로 한정되는지 — 1·2회차 정답이 섞이면 오답으로 뒤집힌다.
+        mockMvc.perform(post("/api/v1/cases/case-call-interception/variants/voice/choices")
+                        .contentType("application/json")
+                        .content("{\"choiceOptionId\":\"case-call-interception-voice-action-3-3\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isCorrect").value(true))
+                .andExpect(jsonPath("$.data.selectedOption.stepNumber").value(3))
+                .andExpect(jsonPath("$.data.correctOptions", hasSize(1)))
+                .andExpect(jsonPath("$.data.correctOptions[0].optionId").value("case-call-interception-voice-action-3-3"));
     }
 
     @Test
