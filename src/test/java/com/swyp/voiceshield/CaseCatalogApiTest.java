@@ -33,7 +33,11 @@ class CaseCatalogApiTest {
             new VariantStepContract("case-call-interception", "voice", "case-call-interception-voice", "VOICE"),
             new VariantStepContract("case-call-interception", "message", "case-call-interception-message", "MESSAGE"),
             new VariantStepContract("case-cyber-investigation", "voice", "case-cyber-investigation-voice", "VOICE"),
-            new VariantStepContract("case-cyber-investigation", "message", "case-cyber-investigation-message", "MESSAGE")
+            new VariantStepContract("case-cyber-investigation", "message", "case-cyber-investigation-message", "MESSAGE"),
+            new VariantStepContract("case-overseas-payment-cancellation", "voice", "case-overseas-payment-cancellation-voice", "VOICE"),
+            new VariantStepContract("case-overseas-payment-cancellation", "message", "case-overseas-payment-cancellation-message", "MESSAGE"),
+            new VariantStepContract("case-delivery-fee-payment", "voice", "case-delivery-fee-payment-voice", "VOICE"),
+            new VariantStepContract("case-delivery-fee-payment", "message", "case-delivery-fee-payment-message", "MESSAGE")
     };
 
     @Autowired
@@ -60,9 +64,19 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.categoryId").value("category-institution-impersonation"))
                 .andExpect(jsonPath("$.data.categoryName").value("기관 사칭"))
                 // 순서는 단언하지 않는다. 정렬이 case_name 한글 오름차순이라 DB 콜레이션에 좌우된다.
-                .andExpect(jsonPath("$.data.cases", hasSize(3)))
+                .andExpect(jsonPath("$.data.cases", hasSize(2)))
                 .andExpect(jsonPath("$.data.cases[*].scenarioId", containsInAnyOrder(
-                        "case-fire-agency", "case-call-interception", "case-cyber-investigation")));
+                        "case-fire-agency", "case-cyber-investigation")));
+    }
+
+    @Test
+    void returnsCallInterceptionInCompositeCategory() throws Exception {
+        mockMvc.perform(get("/api/v1/categories/category-composite-fraud/cases"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.categoryName").value("복합형"))
+                .andExpect(jsonPath("$.data.cases", hasSize(1)))
+                .andExpect(jsonPath("$.data.cases[0].scenarioId").value("case-call-interception"));
     }
 
     @Test
@@ -83,6 +97,45 @@ class CaseCatalogApiTest {
                 .andExpect(jsonPath("$.data.averageDamageAmount").value("약 1700만원"))
                 .andExpect(jsonPath("$.data.reportCount").value("약 59,565건 (2023년 기준)"))
                 .andExpect(jsonPath("$.data.categoryName").value("가족 사칭"));
+    }
+
+    @Test
+    void returnsOverseasPaymentCancellationScenarioFromBothChannels() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-overseas-payment-cancellation"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.caseName").value("해외결제 취소 사기"))
+                .andExpect(jsonPath("$.data.categoryName").value("투자 사기"))
+                .andExpect(jsonPath("$.data.averageDamageAmount").value("수천만 원 규모"))
+                .andExpect(jsonPath("$.data.reportCount").value("약 1,673건 (2023년 기준)"))
+                .andExpect(jsonPath("$.data.variants.voice.content").value(containsString("해외결제가 승인되었습니다")))
+                .andExpect(jsonPath("$.data.variants.message.content").value(containsString("해외결제가")));
+
+        mockMvc.perform(get("/api/v1/cases/case-overseas-payment-cancellation/variants/message/quiz-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.quiz.question")
+                        .value("다음 중 금융사기를 가장 먼저 의심해야 하는 순간은 언제일까요?"))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[2].optionText")
+                        .value("결제 취소를 위해 앱 설치를 요구했을 때"))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true));
+    }
+
+    @Test
+    void returnsDeliveryFeePaymentScenarioWithSimulationAndFinalQuiz() throws Exception {
+        mockMvc.perform(get("/api/v1/cases/case-delivery-fee-payment/variants/voice/simulation-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.actionChoices", hasSize(4)))
+                .andExpect(jsonPath("$.data.actionChoices[1].optionText")
+                        .value("택배사 공식 앱이나 고객센터를 통해 배송 상태를 직접 확인한다."))
+                .andExpect(jsonPath("$.data.quiz").doesNotExist());
+
+        mockMvc.perform(get("/api/v1/cases/case-delivery-fee-payment/variants/message/quiz-step"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.quiz.question")
+                        .value("다음 중 택배 사칭 피싱임을 가장 먼저 의심해야 하는 순간은 언제일까요?"))
+                .andExpect(jsonPath("$.data.choices", hasSize(4)))
+                .andExpect(jsonPath("$.data.choices[2].isCorrect").value(true))
+                .andExpect(jsonPath("$.data.actionChoices").doesNotExist());
     }
 
     @Test
